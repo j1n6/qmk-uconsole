@@ -1,0 +1,42 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@master
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+    - name: Install QMK CLI
+      run: |
+        curl -fsSL https://install.qmk.fm | sh
+        echo "/home/runner/.local/bin" >> $GITHUB_PATH
+        qmk setup
+    - name: Update QMK Firmware
+      run: |
+        git submodule update --init
+        cd qmk_firmware && make git-submodule
+    - name: Link custom keymap definition
+      run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
+    - name: Build firmware hex distribution
+      run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
+      
+    # - name: Upload artifact
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #     name: ?.hex
+    #     path: qmk_firmware/?.hex
+    
+    # - name: Release
+    #   uses: docker://softprops/action-gh-release
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   with:
+    #     files: qmk_firmware/?.hex
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
