@@ -28,8 +28,10 @@ static const int8_t WHEEL_DENOM = 2;
 static int8_t wheel_buffer[AXIS_NUM] = {0};
 
 static float rateToVelocityCurve(float input) {
-  //return std::pow(std::abs(input) / 50, 1.4);
-  return fabsf(input) / 30.0f;
+  // Lower the divisor or add a small "offset" so that even slow movements generate an immediate, minimum velocity.
+  if (fabsf(input) < 0.1f) return 0; // Deadzone
+  // Reducing original 30.0f to 15.0f or 20.0f to make it feel faster/more sensitive
+  return (fabsf(input) / 20.0f) + 0.5f;
 }
 
 static void trackball_move(uint8_t axis, int8_t direction) {
