@@ -14,10 +14,19 @@ Unlike the standard QMK repository, this project isolates the uConsole keyboard 
 
 
 ## 🎯 How to Install
+These steps need to be operated on your uConsole. 
+WARNING: Use SSH session or alternative input devices to operate these upgrade. In case of issues, you can still interact with the device to re-flash or troubleshoot. 
 
- 1. Ensure the DFU Tools is installed: sudo apt install -y dfu-util
- 2. Download the [orignal stock firmware packages](https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz). Unpack the compressed files: `tar zxvf uconsole_keyboard_flash.tar.gz`
- 3. Download latest QMK firmware .bin file from the [Releases](https://github.com/j1n6/qmk-uconsole/releases)
+ 1. Ensure the DFU Tools is installed
+ ```
+ sudo apt install -y dfu-util
+ ```
+ 2. Download the [orignal stock firmware packages](https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz).
+ ```
+ wget https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz && tar zxvf uconsole_keyboard_flash.tar.gz
+ ```
+ 
+ 3. Download latest QMK firmware .bin file from the [Releases](https://github.com/j1n6/qmk-uconsole/releases), move the .bin fine inside the `uconsole_keyboard_flash` folder.
  3. Edit the `maple_upload`, change all the default `750` to `1500` millionsecond delay, othewires you might see the serial port isn’t ready or not found errors.
  4. Flash the QMK firmware by the following command `sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin`
  5. To upgrade QMK firmware from existing QMK: `sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R`
