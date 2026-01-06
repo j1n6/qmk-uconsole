@@ -28,8 +28,15 @@ WARNING: Use SSH session or alternative input devices to operate these upgrade. 
  
  3. Download latest QMK firmware .bin file from the [Releases](https://github.com/j1n6/qmk-uconsole/releases), move the .bin fine inside the `uconsole_keyboard_flash` folder.
  3. Edit the `maple_upload`, change all the default `750` to `1500` millionsecond delay, othewires you might see the serial port isn’t ready or not found errors.
- 4. Flash the QMK firmware by the following command `sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin`
- 5. To upgrade QMK firmware from existing QMK: `sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R`
+ 4. Flash the QMK firmware by the following command:
+```
+sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin`
+```
+ 5. To upgrade QMK firmware from existing QMK, enter the command below. When the screen shows `waiting for device, exit with ctrl-C`, enter the bootloader mode for the uConsole keyboard by pressing three button down at all the same time: `LeftAlt`+`RightAlt`+`Start`
+```
+ sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R
+```
+ 
 
 ## 🤝 Acknowledgments
 Special thanks to **[oesmith](https://github.com/oesmith/qmk_firmware)** for the initial groundwork and porting the base layout to the uConsole hardware.
