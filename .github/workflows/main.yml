@@ -27,11 +27,11 @@ jobs:
     - name: Build firmware hex distribution
       run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
       
-    # - name: Upload artifact
-    #   uses: actions/upload-artifact@master
-    #   with:
-    #     name: ?.hex
-    #     path: qmk_firmware/?.hex
+    - name: Upload artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: clockworkpi_uconsole_default.bin  
+        path: qmk_firmware/.build/clockworkpi_uconsole_default.bin
     
     # - name: Release
     #   uses: docker://softprops/action-gh-release
