@@ -78,7 +78,7 @@ static void trackball_down(void* arg) {
   trackball_move(AXIS_Y, TB_INCR);
 }
 
-void pointing_device_driver_init(void) {
+bool pointing_device_driver_init(void) {
   palSetLineMode(TB_LEFT, PAL_MODE_INPUT_PULLUP);
   palSetLineMode(TB_RIGHT, PAL_MODE_INPUT_PULLUP);
   palSetLineMode(TB_UP, PAL_MODE_INPUT_PULLUP);
@@ -93,6 +93,8 @@ void pointing_device_driver_init(void) {
   palSetLineCallback(TB_RIGHT, trackball_right, NULL);
   palSetLineCallback(TB_UP, trackball_up, NULL);
   palSetLineCallback(TB_DOWN, trackball_down, NULL);
+  
+  return true;
 }
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
