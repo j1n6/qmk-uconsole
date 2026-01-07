@@ -1,3 +1,5 @@
+# WARNING - Still Testing - DO NOT USE
+
 # uConsole QMK Keyboard Firmware
 
 This repository provides a streamlined, standalone QMK firmware distribution specifically optimized for the **ClockworkPi uConsole**.
