@@ -17,11 +17,7 @@ jobs:
       run: |
         curl -fsSL https://install.qmk.fm | sh
         echo "/home/runner/.local/bin" >> $GITHUB_PATH
-        qmk setup
-    - name: Update QMK Firmware
-      run: |
-        git submodule update --init
-        cd qmk_firmware && make git-submodule
+        cd qmk_firmware &&qmk setup
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
     - name: Build firmware hex distribution
