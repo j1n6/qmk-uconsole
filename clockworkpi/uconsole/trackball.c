@@ -2,6 +2,7 @@
 #include "quantum.h"
 #include "rate_meter.h"
 #include "glider.h"
+#include "trackball.h"
 #include <math.h>
 
 #define TB_LEFT  PAL_LINE(GPIOC, 11U)
@@ -13,7 +14,6 @@
 #define TB_INCR 1
 
 enum { AXIS_X = 0, AXIS_Y, AXIS_NUM };
-
 enum { MODE_WHEEL, MODE_MOUSE };
 
 static uint8_t last_mode;
@@ -28,10 +28,22 @@ static const int8_t WHEEL_DENOM = 2;
 static int8_t wheel_buffer[AXIS_NUM] = {0};
 
 static float rateToVelocityCurve(float input) {
-  // Lower the divisor or add a small "offset" so that even slow movements generate an immediate, minimum velocity.
-  if (fabsf(input) < 0.1f) return 0; // Deadzone
-  // Reducing original 30.0f to 15.0f or 20.0f to make it feel faster/more sensitive
-  return (fabsf(input) / 20.0f) + 0.5f;
+  float abs_input = fabsf(input);
+  
+  // 1. Maintain the precision deadzone
+  if (abs_input < 0.05f) return 0;
+
+  // 2. Linearize the base: subtract deadzone so curve starts at 0
+  float x = abs_input - 0.05f;
+
+  // 3. Natural Acceleration Formula:
+  // Base velocity (0.1f) + (scaled_input ^ 1.5)
+  // The 1.5 power provides a smooth, non-linear ramp-up.
+  // The divisor (40.0f) controls how quickly the acceleration kicks in.
+  float accel = powf(x, 1.5f) / 40.0f;
+  float linear = x / 20.0f;
+
+  return 0.1f + linear + accel;
 }
 
 static void trackball_move(uint8_t axis, int8_t direction) {
@@ -46,7 +58,7 @@ static void trackball_move(uint8_t axis, int8_t direction) {
   const float ry = rate_meter_rate(&rate_meters[AXIS_Y]);
 
   const float rate = sqrtf(rx * rx + ry * ry);
-  const float ratio = rateToVelocityCurve(rate) / rate;
+  const float ratio = (rate > 0) ? (rateToVelocityCurve(rate) / rate) : 0;
 
   const float vx = rx * ratio;
   const float vy = ry * ratio;
@@ -60,6 +72,7 @@ static void trackball_move(uint8_t axis, int8_t direction) {
   }
 }
 
+/* Callbacks defined BEFORE init to avoid 'undeclared' errors */
 static void trackball_left(void* arg) {
   (void)arg;
   trackball_move(AXIS_X, TB_DECR);
@@ -80,7 +93,7 @@ static void trackball_down(void* arg) {
   trackball_move(AXIS_Y, TB_INCR);
 }
 
-bool pointing_device_driver_init(void) {
+void pointing_device_driver_init(void) {
   palSetLineMode(TB_LEFT, PAL_MODE_INPUT_PULLUP);
   palSetLineMode(TB_RIGHT, PAL_MODE_INPUT_PULLUP);
   palSetLineMode(TB_UP, PAL_MODE_INPUT_PULLUP);
@@ -95,13 +108,10 @@ bool pointing_device_driver_init(void) {
   palSetLineCallback(TB_RIGHT, trackball_right, NULL);
   palSetLineCallback(TB_UP, trackball_up, NULL);
   palSetLineCallback(TB_DOWN, trackball_down, NULL);
-  
-  return true;
 }
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
   int8_t x = 0, y = 0, h = 0, v = 0;
-
   chSysLock();
 
   const uint16_t now = timer_read();
@@ -114,20 +124,18 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     rate_meter_expire(&rate_meters[AXIS_Y]);
     wheel_buffer[AXIS_X] = 0;
     wheel_buffer[AXIS_Y] = 0;
-  }
-  else {
+  } else {
     rate_meter_tick(&rate_meters[AXIS_X], delta);
     rate_meter_tick(&rate_meters[AXIS_Y], delta);
   }
-  last_mode = mode; 
+  last_mode = mode;
 
   switch(mode){
-    case MODE_MOUSE: {
-      x = glider_glide(&gliders[AXIS_X], delta);
-      y = glider_glide(&gliders[AXIS_Y], delta);
+    case MODE_MOUSE:
+      x = glider_glide(&gliders[AXIS_X], (uint8_t)delta);
+      y = glider_glide(&gliders[AXIS_Y], (uint8_t)delta);
       break;
-    }
-    case MODE_WHEEL: {
+    case MODE_WHEEL:
       wheel_buffer[AXIS_X] += distances[AXIS_X];
       h = wheel_buffer[AXIS_X] / WHEEL_DENOM;
       wheel_buffer[AXIS_X] -= h * WHEEL_DENOM;
@@ -136,12 +144,10 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
       v = wheel_buffer[AXIS_Y] / WHEEL_DENOM;
       wheel_buffer[AXIS_Y] -= v * WHEEL_DENOM;
       break;
-    }
   }
 
   distances[AXIS_X] = 0;
   distances[AXIS_Y] = 0;
-
   chSysUnlock();
 
   if(x !=0 || y != 0 || h != 0 || v != 0) {
@@ -150,27 +156,18 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     mouse_report.h = h;
     mouse_report.v = -v;
   }
-
   return mouse_report;
 }
 
-uint16_t pointing_device_driver_get_cpi(void) {
-  // TODO?
-  return 0;
-}
-
-void pointing_device_driver_set_cpi(uint16_t cpi) {
-  // TODO?
-}
+uint16_t pointing_device_driver_get_cpi(void) { return 0; }
+void pointing_device_driver_set_cpi(uint16_t cpi) { (void)cpi; }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
   if (!process_record_user(keycode, record)) {
     return false;
   }
-
   if (keycode == JS_4) {
     select_button_pressed = record->event.pressed;
   }
-
   return true;
 }
