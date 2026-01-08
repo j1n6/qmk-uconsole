@@ -131,6 +131,23 @@
         .abxy .key-b { top: 50px; left: 15px; }
         .abxy .key-a { top: 50px; left: 65px; }
 
+        /* Middle mouse button - circular */
+        .key-middle-mouse {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            position: absolute;
+            top: 25px;
+            left: calc(50% - 135px);
+            transform: translateX(-50%);
+            padding: 0;
+        }
+
+        .key-middle-mouse.active {
+            transform: translateX(-50%);
+        }
+
 
         /* Key Sizes */
         .w-1-5 { min-width: 60px; }
@@ -162,8 +179,8 @@
             </div>
 
             <div class="shoulders">
-                <div class="key" style="margin-right: 20px; margin-top: -40px;" data-key="l">L</div>
-                <div class="key" style="margin-top: 20px;" data-key="r">R</div>
+                <div class="key" style="margin-right: 20px; margin-top: -40px;" data-mouse="1">L</div>
+                <div class="key" style="margin-top: 20px;" data-mouse="2">R</div>
             </div>
 
             <div class="abxy">
@@ -171,6 +188,7 @@
                 <div class="key key-x" data-key="x">X</div>
                 <div class="key key-b" data-key="b">B</div>
                 <div class="key key-a" data-key="a">A</div>
+                <div class="key key-middle-mouse" data-mouse="3">M</div>
             </div>
         </div>
 
@@ -300,12 +318,38 @@
             }
         }
 
+        function highlightMouseButton(button, isActive) {
+            keys.forEach(el => {
+                const dataMouse = el.getAttribute('data-mouse');
+                if (dataMouse && dataMouse === button.toString()) {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            });
+            
+            if(isActive) {
+                log.innerText = `Last Event: Mouse Button ${button}`;
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
             if (!e.repeat) highlightKey(e, true);
         });
 
         document.addEventListener('keyup', (e) => {
             highlightKey(e, false);
+        });
+
+        // Mouse button detection
+        document.addEventListener('mousedown', (e) => {
+            // e.button: 0 = left, 1 = middle, 2 = right
+            const buttonMap = { 0: 1, 1: 3, 2: 2 }; // Map to QMK button numbers
+            highlightMouseButton(buttonMap[e.button], true);
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            const buttonMap = { 0: 1, 1: 3, 2: 2 };
+            highlightMouseButton(buttonMap[e.button], false);
         });
 
         // Click listener for manual testing (touchscreen support)
