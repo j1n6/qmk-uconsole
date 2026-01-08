@@ -1,5 +1,3 @@
-# WARNING - Still Testing - DO NOT USE
-
 # uConsole QMK Keyboard Firmware
 
 This repository provides a streamlined, standalone QMK firmware distribution specifically optimized for the **ClockworkPi uConsole**.
@@ -29,29 +27,86 @@ This web-based tool provides:
 Perfect for verifying your firmware installation and familiarizing yourself with the uConsole's unique keyboard layout!
 
 
-## 🎯 How to Install
-These steps need to be operated on your uConsole. 
-WARNING: Use SSH session or alternative input devices to operate these upgrade. In case of issues, you can still interact with the device to re-flash or troubleshoot. 
+## 🎯 Installation Guide
 
- 1. Ensure the DFU Tools is installed
- ```
- sudo apt install -y dfu-util
- ```
- 2. Download the [orignal stock firmware packages](https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz).
- ```
- wget https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz && tar zxvf uconsole_keyboard_flash.tar.gz
- ```
+**⚠️ WARNING:** Use SSH or an external keyboard when performing these operations. In case of issues, you'll still be able to interact with the device to re-flash or troubleshoot.
+
+### Prerequisites
+
+Before starting, ensure you have the necessary tools installed on your uConsole:
+
+1. **Install DFU utilities:**
+   ```bash
+   sudo apt install -y dfu-util
+   ```
+
+2. **Download the original stock firmware package:**
+   ```bash
+   wget https://github.com/clockworkpi/uConsole/raw/master/Bin/uconsole_keyboard_flash.tar.gz
+   tar zxvf uconsole_keyboard_flash.tar.gz
+   cd uconsole_keyboard_flash
+   ```
+
+3. **Download the latest QMK firmware:**
+   - Go to [Releases](https://github.com/j1n6/qmk-uconsole/releases)
+   - Download the `clockworkpi_uconsole_default.bin` file
+   - Move it to the `uconsole_keyboard_flash` folder
+
+---
+
+### Option 1: First-Time Flash from Stock Firmware
+
+If you're upgrading from the original ClockworkPi firmware:
+
+1. **Edit the upload script for better reliability:**
+   
+   Open `maple_upload` and change all delay values from `750` to `1500` milliseconds. This prevents "serial port not ready" errors.
+
+2. **Flash the firmware:**
+   ```bash
+   sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin
+   ```
+
+---
+
+### Option 2: Upgrade from Existing QMK Firmware
+
+If you already have QMK installed and want to update:
+
+1. **Run the DFU utility:**
+   ```bash
+   sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R
+   ```
+
+2. **Enter bootloader mode:**
+   
+   When you see `waiting for device, exit with ctrl-C`, press these three keys **simultaneously**:
+   
+   **`Left Alt` + `Right Alt` + `Start`**
+
+---
+
+### 🆘 Recovery: Unbricking Your Keyboard
+
+Don't panic if your keyboard becomes unresponsive! Follow these steps to restore it:
+
+1. **Connect the micro-USB cable** from your uConsole to the keyboard
+
+2. **Enter bootloader mode:**
+   - Locate the **S1 pin** on the keyboard PCB
+   - Short the S1 pin (you'll see a green LED flash)
+![Bootloading illustration](https://github.com/j1n6/qmk-uconsole/blob/main/images/uconsole%20keyboard%20bootloading.jpeg?raw=true)
+
+3. **Flash the stock firmware:**
+   ```bash
+   cd uconsole_keyboard_flash
+   sudo ./flash
+   ```
+   
+   **Note:** You may need to try this several times. Keep the S1 pin shorted while running the command.
+
+4. **Verify:** Once successful, your keyboard should be responsive again. You can then re-flash QMK if needed.
  
- 3. Download latest QMK firmware .bin file from the [Releases](https://github.com/j1n6/qmk-uconsole/releases), move the .bin file inside the `uconsole_keyboard_flash` folder.
- 3. Edit the `maple_upload`, change all the default `750` to `1500` millionsecond delay, othewires you might see the serial port isn’t ready or not found errors.
- 4. Flash the QMK firmware by the following command:
-```
-sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin`
-```
- 5. To upgrade QMK firmware from existing QMK, enter the command below. When the screen shows `waiting for device, exit with ctrl-C`, enter the bootloader mode for the uConsole keyboard by pressing three button down at all the same time: `LeftAlt`+`RightAlt`+`Start`
-```
- sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R
-```
  
 ## 📜 License
 
