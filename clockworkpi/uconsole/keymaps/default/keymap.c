@@ -80,16 +80,24 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 static bool is_locked = false;
 
+// Extern from trackball.c to control scroll mode
+extern volatile bool select_button_pressed;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_locked && keycode != KB_LOCK && keycode != MO(LY1)) {
     return false;
   }
+
   switch (keycode) {
     case KB_LOCK:
       if (record->event.pressed) {
         is_locked = !is_locked;
       }
       return false;
+    case MO(LY1):
+      // Fn key toggles scroll mode (trackball scrolling)
+      select_button_pressed = record->event.pressed;
+      return true;  // Allow normal layer switching to continue
     case JS_LEFT:
       joystick_set_axis(1, record->event.pressed ? -127 : 0);
       return false;
