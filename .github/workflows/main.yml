@@ -13,6 +13,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get -y install gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
+    - name: Init Submodules
+      run: |
+        git submodule update --init
+        cd qmk_firmware && make git-submodule
     - name: Install QMK CLI
       run: |
         curl -fsSL https://install.qmk.fm | sh
