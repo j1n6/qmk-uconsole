@@ -53,6 +53,39 @@
             cursor: default;
             transition: all 0.05s;
             padding: 0 5px;
+            position: relative;
+        }
+
+        /* Layer 2 label */
+        .layer2-label {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 8px;
+            color: #ff8c00;
+            font-weight: normal;
+            pointer-events: none;
+        }
+
+        .layer2-active .layer2-label {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Shift label */
+        .shift-label {
+            position: absolute;
+            top: 2px;
+            right: 3px;
+            font-size: 10px;
+            color: #666;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .shift-active .shift-label {
+            color: #ff0000;
+            font-weight: bold;
         }
 
         /* Active/Pressed State */
@@ -80,6 +113,50 @@
             transform: translateX(-50%);
         }
 
+        /* Upside down triangle for up button */
+        .key-up {
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+            width: 80px;
+            min-width: 80px;
+            height: 40px;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 0px #888;
+            filter: none;
+        }
+
+        /* Triangle for right button (pointing left) */
+        .key-right {
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+            width: 40px;
+            min-width: 40px;
+            height: 80px;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 0px #888;
+            filter: none;
+        }
+
+        /* Triangle for down button (pointing up) */
+        .key-down {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            width: 80px;
+            min-width: 80px;
+            height: 40px;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 0px #888;
+            filter: none;
+        }
+
+        /* Triangle for left button (pointing right) */
+        .key-left {
+            clip-path: polygon(100% 50%, 0% 0%, 0% 100%);
+            width: 40px;
+            min-width: 40px;
+            height: 80px;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 0px #888;
+            filter: none;
+        }
+
         /* Specific Layout Groups */
         .top-section {
             display: flex;
@@ -101,16 +178,34 @@
             justify-content: center;
         }
         .d-pad .key { position: absolute; }
-        .key-up { top: -5px; left: 50%; transform: translateX(-50%);}
-        .key-down { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .key-left { top: calc(50% - 2px); left: 0; transform: translateY(-50%); }
-        .key-right { top: calc(50% - 2px); right: 0; transform: translateY(-50%); }
+        .key-up { top: 15px; left: 50%; transform: translateX(-50%);}
+        .key-down { bottom: 15px; left: 50%; transform: translateX(-50%); }
+        .key-left { top: 50%; left: 10px; transform: translateY(-50%); }
+        .key-right { top: 50%; right: 10px; transform: translateY(-50%); }
 
         /* Shoulder Buttons */
         .shoulders {
-            display: flex;
-            gap: 20px;
+            position: relative;
             margin-bottom: 40px; /* Push them up slightly relative to others */
+        }
+
+        .shoulders .key {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            padding: 0;
+            position: absolute;
+        }
+
+        .shoulders .key:first-child {
+            top: -60px;
+            left: -180px;
+        }
+
+        .shoulders .key:last-child {
+            top: -20px;
+            left: -150px;
         }
 
         /* Gamepad ABXY Layout */
@@ -119,7 +214,14 @@
             width: 120px;
             height: 120px;
         }
-        .abxy .key { position: absolute; }
+        .abxy .key { 
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            padding: 0;
+        }
         .key-x { top: 0; right: 20px; } /* X is usually top on standard layout, image shows X top rightish? layout varies by model, mapped visually */
         .key-y { top: 0; left: 20px; }
         .key-a { bottom: 20px; right: 0; }
@@ -146,6 +248,42 @@
 
         .key-middle-mouse.active {
             transform: translateX(-50%);
+        }
+
+        .key-middle-mouse.cursor-moving {
+            border: 1px solid #4CAF50;
+        }
+
+        /* Scroll indicators */
+        .scroll-indicator {
+            width: 8px;
+            height: 20px;
+            min-width: 8px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            box-shadow: 1px 1px 0px #888;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            line-height: 8px;
+        }
+
+        .scroll-up {
+            top: -25px;
+        }
+
+        .scroll-down {
+            bottom: -25px;
+        }
+
+        .scroll-indicator.active {
+            background-color: #4CAF50;
         }
 
 
@@ -179,64 +317,68 @@
             </div>
 
             <div class="shoulders">
-                <div class="key" style="margin-right: 20px; margin-top: -40px;" data-mouse="1">L</div>
-                <div class="key" style="margin-top: 20px;" data-mouse="2">R</div>
+                <div class="key" data-mouse="1">L</div>
+                <div class="key" data-mouse="2">R</div>
             </div>
 
             <div class="abxy">
-                <div class="key key-y" data-key="y">Y</div>
-                <div class="key key-x" data-key="x">X</div>
-                <div class="key key-b" data-key="b">B</div>
-                <div class="key key-a" data-key="a">A</div>
-                <div class="key key-middle-mouse" data-mouse="3">M</div>
+                <div class="key key-y" data-key="QK_JOYSTICK_BUTTON_1">Y</div>
+                <div class="key key-x" data-key="QK_JOYSTICK_BUTTON_0">X</div>
+                <div class="key key-b" data-key="QK_JOYSTICK_BUTTON_2">B</div>
+                <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_3">A</div>
+                <div class="key key-middle-mouse" data-mouse="3">
+                    <div class="scroll-indicator scroll-up">▲</div>
+                    M
+                    <div class="scroll-indicator scroll-down">▼</div>
+                </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="key w-1-5" data-code="Escape">Esc</div>
-            <div class="key w-1-5" data-key="select">Select</div>
-            <div class="key w-1-5" data-key="start">Start</div>
+            <div class="key w-1-5" data-code="Escape"><span class="layer2-label">Lock</span>Esc</div>
+            <div class="key w-1-5" data-key="select"><span class="layer2-label">Prt</span>Select</div>
+            <div class="key w-1-5" data-key="start"><span class="layer2-label">Pause</span>Start</div>
             
             <div class="spacer" style="width: 100px;"></div> <div class="key" data-key="vol">Vol</div>
-            <div class="key" data-code="BracketLeft">[</div>
-            <div class="key" data-code="BracketRight">]</div>
-            <div class="key" data-code="Slash">/</div>
-            <div class="key" data-code="Minus">-</div>
-            <div class="key" data-code="Equal">=</div>
-            <div class="key" data-code="Backslash">\</div>
+            <div class="key" data-code="BracketLeft"><span class="shift-label">{</span>[</div>
+            <div class="key" data-code="BracketRight"><span class="shift-label">}</span>]</div>
+            <div class="key" data-code="Slash"><span class="shift-label">?</span>/</div>
+            <div class="key" data-code="Minus"><span class="layer2-label">F11</span><span class="shift-label">_</span>-</div>
+            <div class="key" data-code="Equal"><span class="layer2-label">F12</span><span class="shift-label">+</span>=</div>
+            <div class="key" data-code="Backslash"><span class="shift-label">|</span>\</div>
         </div>
 
         <div class="row">
-            <div class="key" data-code="Backquote">~</div>
-            <div class="key" data-code="Digit1">1</div>
-            <div class="key" data-code="Digit2">2</div>
-            <div class="key" data-code="Digit3">3</div>
-            <div class="key" data-code="Digit4">4</div>
-            <div class="key" data-code="Digit5">5</div>
-            <div class="key" data-code="Digit6">6</div>
-            <div class="key" data-code="Digit7">7</div>
-            <div class="key" data-code="Digit8">8</div>
-            <div class="key" data-code="Digit9">9</div>
-            <div class="key" data-code="Digit0">0</div>
-            <div class="key w-2" data-code="Backspace">Backspace</div>
+            <div class="key" data-code="Backquote"><span class="shift-label">~</span>`</div>
+            <div class="key" data-code="Digit1"><span class="layer2-label">F1</span><span class="shift-label">!</span>1</div>
+            <div class="key" data-code="Digit2"><span class="layer2-label">F2</span><span class="shift-label">@</span>2</div>
+            <div class="key" data-code="Digit3"><span class="layer2-label">F3</span><span class="shift-label">#</span>3</div>
+            <div class="key" data-code="Digit4"><span class="layer2-label">F4</span><span class="shift-label">$</span>4</div>
+            <div class="key" data-code="Digit5"><span class="layer2-label">F5</span><span class="shift-label">%</span>5</div>
+            <div class="key" data-code="Digit6"><span class="layer2-label">F6</span><span class="shift-label">^</span>6</div>
+            <div class="key" data-code="Digit7"><span class="layer2-label">F7</span><span class="shift-label">&</span>7</div>
+            <div class="key" data-code="Digit8"><span class="layer2-label">F8</span><span class="shift-label">*</span>8</div>
+            <div class="key" data-code="Digit9"><span class="layer2-label">F9</span><span class="shift-label">(</span>9</div>
+            <div class="key" data-code="Digit0"><span class="layer2-label">F10</span><span class="shift-label">)</span>0</div>
+            <div class="key w-2" data-code="Backspace"><span class="layer2-label">Del</span>Backspace</div>
         </div>
 
         <div class="row">
-            <div class="key w-1-5" data-code="Tab">Tab</div>
+            <div class="key w-1-5" data-code="Tab"><span class="layer2-label">Cap</span>Tab</div>
             <div class="key" data-code="KeyQ">Q</div>
             <div class="key" data-code="KeyW">W</div>
             <div class="key" data-code="KeyE">E</div>
             <div class="key" data-code="KeyR">R</div>
             <div class="key" data-code="KeyT">T</div>
             <div class="key" data-code="KeyY">Y</div>
-            <div class="key" data-code="KeyU">U</div>
-            <div class="key" data-code="KeyI">I</div>
+            <div class="key" data-code="KeyU"><span class="layer2-label">PgU</span>U</div>
+            <div class="key" data-code="KeyI"><span class="layer2-label">Ins</span>I</div>
             <div class="key" data-code="KeyO">O</div>
             <div class="key" data-code="KeyP">P</div>
         </div>
 
         <div class="row">
-            <div class="key" data-code="Quote">'</div>
+            <div class="key" data-code="Quote"><span class="shift-label">"</span>'</div>
             <div class="key" data-code="KeyA">A</div>
             <div class="key" data-code="KeyS">S</div>
             <div class="key" data-code="KeyD">D</div>
@@ -246,7 +388,7 @@
             <div class="key" data-code="KeyJ">J</div>
             <div class="key" data-code="KeyK">K</div>
             <div class="key" data-code="KeyL">L</div>
-            <div class="key" data-code="Semicolon">;</div>
+            <div class="key" data-code="Semicolon"><span class="shift-label">:</span>;</div>
             <div class="key w-2" data-code="Enter">Enter</div>
         </div>
 
@@ -259,15 +401,15 @@
             <div class="key" data-code="KeyB">B</div>
             <div class="key" data-code="KeyN">N</div>
             <div class="key" data-code="KeyM">M</div>
-            <div class="key" data-code="Comma">&lt;</div>
-            <div class="key" data-code="Period">&gt;</div>
+            <div class="key" data-code="Comma"><span class="layer2-label">Dim</span><span class="shift-label"><</span>,</div>
+            <div class="key" data-code="Period"><span class="layer2-label">Bright</span><span class="shift-label">></span>.</div>
             <div class="key w-1-5" data-code="ShiftRight">Shift</div>
         </div>
 
         <div class="row">
             <div class="key" data-key="fn">Fn</div>
             <div class="key" data-code="ControlLeft">Ctrl</div>
-            <div class="key" data-code="AltLeft">Alt</div>
+            <div class="key" data-code="AltLeft"><span class="layer2-label">Cmd</span>Alt</div>
             <div class="key w-space" data-code="Space">Space</div>
             <div class="key" data-code="AltRight">Alt</div>
             <div class="key" data-code="ControlRight">Ctrl</div>
@@ -277,24 +419,155 @@
 
     <div id="log">Press keys to test...</div>
 
+    <div style="margin-top: 10px; color: #888; font-size: 11px; text-align: left; max-width: 600px;">
+        <strong>Note:</strong> FN keys highlight when Layer 2 functions are active (F1-F12, Delete, Caps, etc.), 
+        indicating the momentary layer switch is engaged.
+    </div>
+
     <script>
         // Select logic
         const keys = document.querySelectorAll('.key');
         const log = document.getElementById('log');
+        const middleMouseButton = document.querySelector('.key-middle-mouse');
+        const scrollUpIndicator = document.querySelector('.scroll-up');
+        const scrollDownIndicator = document.querySelector('.scroll-down');
+        let cursorMoveTimeout;
+        let scrollTimeout;
+        let shiftPressed = false;
+
+        // Cursor movement detection
+        document.addEventListener('mousemove', () => {
+            if (middleMouseButton) {
+                middleMouseButton.classList.add('cursor-moving');
+                
+                // Clear existing timeout
+                clearTimeout(cursorMoveTimeout);
+                
+                // Reset after 200ms of no movement
+                cursorMoveTimeout = setTimeout(() => {
+                    middleMouseButton.classList.remove('cursor-moving');
+                }, 200);
+            }
+        });
+
+        // Scroll detection
+        document.addEventListener('wheel', (e) => {
+            clearTimeout(scrollTimeout);
+            
+            if (e.deltaY < 0) {
+                // Scrolling up
+                scrollUpIndicator.classList.add('active');
+                scrollDownIndicator.classList.remove('active');
+                // Highlight FN keys
+                keys.forEach(el => {
+                    if (el.getAttribute('data-key') === 'fn') {
+                        el.classList.add('active');
+                    }
+                });
+            } else if (e.deltaY > 0) {
+                // Scrolling down
+                scrollDownIndicator.classList.add('active');
+                scrollUpIndicator.classList.remove('active');
+                // Highlight FN keys
+                keys.forEach(el => {
+                    if (el.getAttribute('data-key') === 'fn') {
+                        el.classList.add('active');
+                    }
+                });
+            }
+            
+            // Reset after 150ms
+            scrollTimeout = setTimeout(() => {
+                scrollUpIndicator.classList.remove('active');
+                scrollDownIndicator.classList.remove('active');
+                // Remove FN key highlight
+                keys.forEach(el => {
+                    if (el.getAttribute('data-key') === 'fn') {
+                        el.classList.remove('active');
+                    }
+                });
+            }, 150);
+        });
 
         function highlightKey(e, isActive) {
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
-
-            // Map custom JS_4 joystick event to Fn for visualization
-            if (code === 'QK_JOYSTICK_BUTTON_4' || key === 'qk_joystick_button_4') {
-                key = 'fn';
+            
+            // Map of shift characters to their base key codes
+            const shiftCharMap = {
+                '!': 'Digit1', '@': 'Digit2', '#': 'Digit3', '$': 'Digit4', '%': 'Digit5',
+                '^': 'Digit6', '&': 'Digit7', '*': 'Digit8', '(': 'Digit9', ')': 'Digit0',
+                '_': 'Minus', '+': 'Equal', '{': 'BracketLeft', '}': 'BracketRight',
+                '|': 'Backslash', ':': 'Semicolon', '"': 'Quote', '<': 'Comma',
+                '>': 'Period', '?': 'Slash', '~': 'Backquote'
+            };
+            
+            // Check if this is a shift character being pressed
+            const actualKey = e.key;
+            const isShiftChar = shiftCharMap[actualKey] !== undefined;
+            
+            if (isShiftChar && isActive) {
+                // Only highlight the specific shift-label, not the button
+                const targetCode = shiftCharMap[actualKey];
+                keys.forEach(el => {
+                    const dataCode = el.getAttribute('data-code');
+                    if (dataCode === targetCode) {
+                        const shiftLabel = el.querySelector('.shift-label');
+                        if (shiftLabel) {
+                            el.classList.add('shift-active');
+                        }
+                    }
+                });
+                // Return early to prevent button activation for shift characters
+                if (isActive) {
+                    log.innerText = `Last Event: Code=${code}, Key=${actualKey}`;
+                }
+                return;
+            } else if (!isActive && !isShiftChar) {
+                // Remove shift-active from all when key is released
+                keys.forEach(el => {
+                    el.classList.remove('shift-active');
+                });
+            }
+            
+            // Track shift key state, but only activate shift button if pressed alone (not for special chars)
+            if (code === 'ShiftLeft' || code === 'ShiftRight') {
+                shiftPressed = isActive;
+                // Don't return here, let it continue to normal key highlighting
+                // This allows shift to be highlighted when pressed by itself
             }
             
             // Prevent default behavior for some keys to keep focus on window
             if(["Tab", "AltLeft", "AltRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
                 e.preventDefault();
             }
+
+            // Layer 2 key mapping - maps layer 2 keycodes to their base layer keys
+            const layer2Mapping = {
+                'F1': 'Digit1',
+                'F2': 'Digit2',
+                'F3': 'Digit3',
+                'F4': 'Digit4',
+                'F5': 'Digit5',
+                'F6': 'Digit6',
+                'F7': 'Digit7',
+                'F8': 'Digit8',
+                'F9': 'Digit9',
+                'F10': 'Digit0',
+                'F11': 'Minus',
+                'F12': 'Equal',
+                'Delete': 'Backspace',
+                'CapsLock': 'Tab',
+                'PageUp': 'KeyU',
+                'Insert': 'KeyI',
+                'PrintScreen': 'select',
+                'Pause': 'start',
+                'MetaLeft': 'AltLeft',
+                'BrightnessDown': 'Comma',
+                'BrightnessUp': 'Period'
+            };
+
+            const isLayer2Key = layer2Mapping[code] !== undefined;
 
             keys.forEach(el => {
                 const dataCode = el.getAttribute('data-code');
@@ -310,6 +583,21 @@
                 else if (dataKey && dataKey === key) {
                     if (isActive) el.classList.add('active');
                     else el.classList.remove('active');
+                }
+
+                // Highlight FN keys when any layer 2 key is active
+                if (dataKey === 'fn' && isLayer2Key) {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+
+                // Handle layer 2 highlighting
+                const layer2BaseKey = layer2Mapping[code];
+                if (layer2BaseKey) {
+                    if ((dataCode === layer2BaseKey) || (dataKey === layer2BaseKey)) {
+                        if (isActive) el.classList.add('layer2-active');
+                        else el.classList.remove('layer2-active');
+                    }
                 }
             });
 
@@ -333,35 +621,47 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            e.stopPropagation();
             if (!e.repeat) highlightKey(e, true);
         });
 
         document.addEventListener('keyup', (e) => {
+            e.stopPropagation();
             highlightKey(e, false);
         });
 
         // Mouse button detection
         document.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
             // e.button: 0 = left, 1 = middle, 2 = right
             const buttonMap = { 0: 1, 1: 3, 2: 2 }; // Map to QMK button numbers
             highlightMouseButton(buttonMap[e.button], true);
         });
 
         document.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
             const buttonMap = { 0: 1, 1: 3, 2: 2 };
             highlightMouseButton(buttonMap[e.button], false);
         });
 
         // Click listener for manual testing (touchscreen support)
         keys.forEach(k => {
-            k.addEventListener('mousedown', () => k.classList.add('active'));
-            k.addEventListener('mouseup', () => k.classList.remove('active'));
+            k.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                k.classList.add('active');
+            });
+            k.addEventListener('mouseup', (e) => {
+                e.stopPropagation();
+                k.classList.remove('active');
+            });
             k.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 k.classList.add('active');
             });
             k.addEventListener('touchend', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 k.classList.remove('active');
             });
         });
