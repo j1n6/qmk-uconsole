@@ -32,7 +32,7 @@ jobs:
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
     
     - name: Build firmware hex distribution
-      run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
+      run: cd qmk_firmware && /home/runner/.local/bin/qmk compile -kb clockworkpi/uconsole -km default
       
     - name: Upload artifact
       uses: actions/upload-artifact@master
