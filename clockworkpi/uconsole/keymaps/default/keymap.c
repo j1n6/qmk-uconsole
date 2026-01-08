@@ -27,9 +27,19 @@ combo_t key_combos[] = {COMBO(bootloader_combo, QK_BOOT)};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*
-     * ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
-     * │ A │ B │ C │ D │ E │ F │ G │ H │ I │ J │ K │ L │ M │ N │ O │ P │ Q │
-     * └───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘
+     * Layer 0: Default
+     *
+     *   (Up)             ( L ) ( R )          ( Y ) ( X )
+     * (Lt)  (Rt)                               ( B ) ( A )
+     *   (Dn)                                     (o - middle click - trackball.c)
+     *
+     * (Esc)(Sel)(Sta)     (Vol)( [ )( ] )( / )( - )( = )( \ )
+     * ( ~ )( 1 )( 2 )( 3 )( 4 )( 5 )( 6 )( 7 )( 8 )( 9 )( 0 )(Bsp)
+     * (Tab)( Q )( W )( E )( R )( T )( Y )( U )( I )( O )( P )
+     * ( ' )( A )( S )( D )( F )( G )( H )( J )( K )( L )( ; )(Ent)
+     * (Sft)( Z )( X )( C )( V )( B )( N )( M )( , )( . )(Sft)
+     *  (Fn)(Ctl)(Alt)(       Space      )(Alt)(Ctl)(Fn)
+     *
      */
     [LY0] = LAYOUT(
         KC_UP,   KC_DOWN, KC_LEFT, KC_RGHT, JS_0,    JS_1,    JS_2,    JS_3,
@@ -46,6 +56,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_BSPC, KC_ENT,  MO(LY1), MO(LY1), KC_SPC,  KC_NO,   KC_NO,   KC_NO
     ),
 
+    /*
+     * Layer 1: Fn Keys
+     *
+     *   (PgU)            ( L ) ( R )          (   ) (   )
+     * (Hom) (End)                               (   ) (   )
+     *   (PgD)                                    (o - trackball.c)
+     *
+     * (Lck)(Prt)(Pau)     (Mut)(   )(   )(   )(F11)(F12)(   )
+     * (   )(F1 )(F2 )(F3 )(F4 )(F5 )(F6 )(F7 )(F8 )(F9 )(F10)(Del)
+     * (Cap)(   )(   )(   )(   )(   )(   )(PgU)(Ins)(   )(   )
+     * (   )(   )(   )(   )(   )(Tg2)(Hom)(End)(PgD)(   )(   )(   )
+     * (   )(   )(   )(   )(   )(   )(   )(   )(Bdn)(Bup)(   )
+     *  (  )(   )(Cmd)(      BlStp       )(Cmd)(   )(  )
+     */
+
     [LY1] = LAYOUT(
         KC_PGUP, KC_PGDN, KC_HOME, KC_END,  _______, _______, _______, _______,
         _______, _______, _______, _______, KC_LGUI, _______, KC_RGUI, _______,
@@ -61,7 +86,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_DEL,  _______, _______, _______, BL_STEP, _______, _______, _______
     ),
 
-    // Gamepad mode, where the arrow keys change to be d-pad buttons.
+    /*
+     * Layer 2: Gamepad (Toggled by Fn+G)
+     *
+     *   (JS_L)           (   ) (   )          (   ) (   )
+     * (JS_U) (JS_D)                             (   ) (   )
+     *   (JS_R)                                   (   )
+     *
+     * [Note: D-pad keys mapped to Joystick Axis]
+     */
     [LY2] = LAYOUT(
         JS_LEFT, JS_RGHT, JS_UP,   JS_DOWN, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______,
