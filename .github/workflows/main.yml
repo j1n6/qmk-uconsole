@@ -23,7 +23,7 @@ jobs:
     - name: Init Submodules
       run: |
         git submodule update --init
-        cd qmk_firmware && make git-submodule
+        cd qmk_firmware
     
     - name: Install QMK CLI
       run: |
