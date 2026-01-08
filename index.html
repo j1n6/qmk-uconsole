@@ -445,6 +445,75 @@
         let capsLockActive = false;
         let gamepadIndex = null;
         let gamepadButtonStates = {};
+        let trustStandardCapsLockApi = true; // Standard API reliability flag
+
+        // Helper to sync Caps Lock state from any event
+        function checkCapsLockState(e) {
+            let standardState = null;
+            let heuristicState = null;
+
+            // 1. Try standard API
+            if (e && typeof e.getModifierState === 'function') {
+                standardState = e.getModifierState('CapsLock');
+            }
+
+            // 2. Heuristic fallback (alphanumeric keys)
+            if (e.type === 'keydown' || e.type === 'keypress') {
+                const key = e.key;
+
+                // Manual toggle on CapsLock press to ensure immediate responsiveness
+                // (Fixes issue where API returns stale state on Linux/Firefox)
+                if (key === 'CapsLock' && e.type === 'keydown' && !e.repeat) {
+                    heuristicState = !capsLockActive;
+                }
+                else if (key && key.length === 1 && /[a-zA-Z]/.test(key)) {
+                    const isUpper = key === key.toUpperCase() && key !== key.toLowerCase();
+                    const isLower = key === key.toLowerCase() && key !== key.toUpperCase();
+                    const shift = e.shiftKey;
+                    
+                    if (isUpper && !shift) heuristicState = true;       // A -> Caps ON
+                    else if (isLower && !shift) heuristicState = false; // a -> Caps OFF
+                    else if (isLower && shift) heuristicState = true;   // Shift+a -> Caps ON (Win/Lin)
+                }
+            }
+
+            // Detect API reliability issues
+            if (heuristicState !== null && standardState !== null) {
+                // If standard API contradicts observing reality, mark it unreliable
+                // (e.g. API says OFF, but we just typed 'A' without shift)
+                if (heuristicState !== standardState) {
+                    if (trustStandardCapsLockApi) {
+                        console.log("CapsLock API mismatch detected. Disabling standard API trust.");
+                        trustStandardCapsLockApi = false;
+                    }
+                } else {
+                     // If they match, we could restore trust, but flaky APIs are usually consistently flaky
+                     // or state-dependent, so safer to stay distrustful once burned?
+                     // Let's leave trust false if it ever failed.
+                }
+            }
+
+            // Determine final state
+            let newState = null;
+            if (heuristicState !== null) {
+                // Heuristic is absolute truth if available
+                newState = heuristicState;
+            } else if (trustStandardCapsLockApi && standardState !== null) {
+                // Only use standard API if we still trust it
+                newState = standardState;
+            }
+
+            // Apply state
+            if (newState !== null && newState !== capsLockActive) {
+                capsLockActive = newState;
+                keys.forEach(el => {
+                    if (el.getAttribute('data-code') === 'Tab') {
+                        if (capsLockActive) el.classList.add('layer2-active');
+                        else el.classList.remove('layer2-active');
+                    }
+                });
+            }
+        }
 
         // Gamepad API detection
         window.addEventListener('gamepadconnected', (e) => {
@@ -530,7 +599,8 @@
         }
 
         // Cursor movement detection
-        document.addEventListener('mousemove', () => {
+        document.addEventListener('mousemove', (e) => {
+            checkCapsLockState(e);
             if (middleMouseButton) {
                 middleMouseButton.classList.add('cursor-moving');
                 
@@ -543,6 +613,12 @@
                 }, 200);
             }
         });
+
+        // Attempt to sync on focus/load (best effort - browser strictness varies)
+        // Note: Many browsers block reading modifier state on event types other than 
+        // KeyboardEvent/MouseEvent for security/fingerprinting reasons.
+        window.addEventListener('focus', checkCapsLockState);
+        window.addEventListener('load', checkCapsLockState);
 
         // Scroll detection
         document.addEventListener('wheel', (e) => {
@@ -590,22 +666,8 @@
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
             
-            // Always sync Caps Lock state on every key event
-            const currentCapsLockState = e.getModifierState('CapsLock');
-            if (currentCapsLockState !== capsLockActive) {
-                capsLockActive = currentCapsLockState;
-                // Update the Tab button to reflect current Caps Lock state
-                keys.forEach(el => {
-                    const dataCode = el.getAttribute('data-code');
-                    if (dataCode === 'Tab') {
-                        if (capsLockActive) {
-                            el.classList.add('layer2-active');
-                        } else {
-                            el.classList.remove('layer2-active');
-                        }
-                    }
-                });
-            }
+            // Sync Caps Lock state
+            checkCapsLockState(e);
             
             // Map of shift characters to their base key codes
             const shiftCharMap = {
@@ -663,29 +725,6 @@
                 shiftPressed = isActive;
                 // Don't return here, let it continue to normal key highlighting
                 // This allows shift to be highlighted when pressed by itself
-            }
-            
-            // Handle Caps Lock toggle state
-            if (code === 'CapsLock') {
-                // Use actual system Caps Lock state instead of toggling
-                capsLockActive = e.getModifierState('CapsLock');
-                
-                // Always keep Caps Lock button highlighted when caps is on
-                keys.forEach(el => {
-                    const dataCode = el.getAttribute('data-code');
-                    const layer2BaseKey = 'Tab'; // CapsLock maps to Tab
-                    if (dataCode === layer2BaseKey) {
-                        if (capsLockActive) {
-                            el.classList.add('layer2-active');
-                        } else {
-                            el.classList.remove('layer2-active');
-                        }
-                    }
-                });
-                if (isActive) {
-                    log.innerText = `Last Event: Code=${code}, CapsLock=${capsLockActive ? 'ON' : 'OFF'}`;
-                }
-                return; // Don't process CapsLock as a normal key
             }
             
             // Layer 2 key mapping - maps layer 2 keycodes to their base layer keys
@@ -766,7 +805,11 @@
                         if (isActive) {
                             el.classList.add('layer2-active');
                         } else {
-                            el.classList.remove('layer2-active');
+                            // Only remove if not Caps Lock active (for Tab key)
+                            const isTabKey = (dataCode === 'Tab');
+                            if (!isTabKey || !capsLockActive) {
+                                el.classList.remove('layer2-active');
+                            }
                         }
                     }
                 }
@@ -811,6 +854,7 @@
 
         // Mouse button detection
         document.addEventListener('mousedown', (e) => {
+            checkCapsLockState(e);
             e.preventDefault();
             e.stopPropagation();
             // e.button: 0 = left, 1 = middle, 2 = right
@@ -819,6 +863,7 @@
         });
 
         document.addEventListener('mouseup', (e) => {
+            checkCapsLockState(e);
             e.preventDefault();
             e.stopPropagation();
             const buttonMap = { 0: 1, 1: 3, 2: 2 };

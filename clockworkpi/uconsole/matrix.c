@@ -62,7 +62,7 @@ void matrix_init_custom(void) {
     /* Initialize diode-driven matrix pins depending on diode direction */
 #if defined(DIODE_DIRECTION)
 #    if (DIODE_DIRECTION == COL2ROW)
-    /* COL2ROW: columns are inputs (pull-up), rows are outputs (idle HIGH) */
+    /* COL2ROW: columns are inputs (pull-up), rows are outputs (idle INPUT/Hi-Z) */
 #        ifdef MATRIX_COL_PINS
     for (uint8_t c = 0; c < MATRIX_COLS; c++) {
         pin_t p = matrix_col_pins[c];
@@ -74,8 +74,8 @@ void matrix_init_custom(void) {
     for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
         pin_t p = matrix_row_pins[r];
         if (p == NO_PIN) continue;
-        gpio_set_pin_output(p);
-        gpio_write_pin_high(p); // deselect
+        /* Set rows to INPUT (Hi-Z) initially to prevent ghosting/masking */
+        gpio_set_pin_input(p);
     }
 #        endif
 
@@ -134,8 +134,12 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
     for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
         pin_t rp = matrix_row_pins[r];
         if (rp == NO_PIN) continue;
-        gpio_write_pin_low(rp);   /* select row */
-        small_delay();
+        
+        /* Select row: Set as Output and Drive Low */
+        gpio_set_pin_output(rp);
+        gpio_write_pin_low(rp);
+        wait_us(30);  /* delay for signal settling */
+        
 #            ifdef MATRIX_COL_PINS
         for (uint8_t c = 0; c < MATRIX_COLS; c++) {
             pin_t cp = matrix_col_pins[c];
@@ -145,8 +149,10 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
             }
         }
 #            endif
-        gpio_write_pin_high(rp);  /* unselect row */
-        small_delay();
+        
+        /* Unselect row: Set back to Input (Hi-Z) */
+        gpio_set_pin_input(rp);
+        wait_us(30);  /* delay before next row */
     }
 #        else
 #            error "MATRIX_ROW_PINS must be defined for COL2ROW"

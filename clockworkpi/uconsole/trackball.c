@@ -150,3 +150,7 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
 
 uint16_t pointing_device_driver_get_cpi(void) { return 0; }
 void pointing_device_driver_set_cpi(uint16_t cpi) { (void)cpi; }
+
+bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    return process_record_user(keycode, record);
+}
