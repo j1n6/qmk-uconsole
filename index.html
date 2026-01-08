@@ -62,7 +62,7 @@
             top: 2px;
             left: 3px;
             font-size: 8px;
-            color: #ff8c00;
+            color: #d97300;
             font-weight: normal;
             pointer-events: none;
         }
@@ -82,7 +82,7 @@
             top: 2px;
             right: 3px;
             font-size: 10px;
-            color: #666;
+            color: #191919;
             font-weight: bold;
             pointer-events: none;
         }
@@ -427,7 +427,7 @@
 
     <div id="log">Press keys to test...</div>
 
-    <div style="margin-top: 10px; color: #888; font-size: 11px; text-align: left; max-width: 600px;">
+    <div style="margin-top: 10px; color: #323232; font-size: 11px; text-align: left; max-width: 600px;">
         <strong>Note:</strong> FN keys highlight when Layer 2 functions are active (F1-F12, Delete, Caps, etc.), 
         indicating the momentary layer switch is engaged.
     </div>
@@ -459,8 +459,21 @@
 
         // Poll gamepad state
         function pollGamepad() {
+            const gamepads = navigator.getGamepads();
+            
+            // Auto-reconnect logic: try to find a connected gamepad
+            if (gamepadIndex === null || !gamepads[gamepadIndex]) {
+                // Look for any connected gamepad
+                for (let i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i]) {
+                        gamepadIndex = i;
+                        log.innerText = `Gamepad reconnected: ${gamepads[i].id}`;
+                        break;
+                    }
+                }
+            }
+            
             if (gamepadIndex !== null) {
-                const gamepads = navigator.getGamepads();
                 const gamepad = gamepads[gamepadIndex];
                 
                 if (gamepad) {
@@ -488,6 +501,9 @@
                             gamepadButtonStates[index] = isPressed;
                         }
                     });
+                } else {
+                    // Gamepad at index is no longer valid
+                    gamepadIndex = null;
                 }
             }
             requestAnimationFrame(pollGamepad);
