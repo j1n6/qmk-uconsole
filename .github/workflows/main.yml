@@ -28,7 +28,7 @@ jobs:
     - name: Install QMK CLI
       run: |
         cd qmk_firmware && 3 | qmk setup
-        /home/runner/.local/share/uv/tools/qmk/bin/python -m pip install -r $(pwd)/qmk_firmware/requirements.txt
+        /home/runner/.local/share/uv/tools/qmk/bin/python -m pip install -r $(pwd)/requirements.txt
     
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
