@@ -9,21 +9,29 @@ jobs:
     
     steps:
     - uses: actions/checkout@master
+    
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get -y install gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi
-    - name: Init Submodules
-      run: |
-        git submodule update --init
-        cd qmk_firmware && make git-submodule
+    
     - name: Install QMK CLI
       run: |
         curl -fsSL https://install.qmk.fm | sh
         echo "/home/runner/.local/bin" >> $GITHUB_PATH
+    
+    - name: Init Submodules
+      run: |
+        git submodule update --init
+        cd qmk_firmware && make git-submodule
+    
+    - name: Install QMK CLI
+      run: |
         cd qmk_firmware && /home/runner/.local/bin/qmk setup
+    
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
+    
     - name: Build firmware hex distribution
       run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
       
