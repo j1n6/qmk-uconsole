@@ -22,14 +22,11 @@ jobs:
     
     - name: Init Submodules
       run: |
-        git submodule update --init
-        cd qmk_firmware
-    
+        git submodule update --init --recursive
+
     - name: Install QMK CLI
       run: |
-        cd qmk_firmware && /home/runner/.local/bin/qmk setup << 'EOF'
-        3
-        EOF
+        cd qmk_firmware && 3 | /home/runner/.local/bin/qmk setup
     
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
