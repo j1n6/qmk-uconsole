@@ -567,6 +567,9 @@
         });
 
         function highlightKey(e, isActive) {
+            // Prevent all default browser actions for keys
+            e.preventDefault();
+            
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
             
@@ -583,28 +586,27 @@
             const actualKey = e.key;
             const isShiftChar = shiftCharMap[actualKey] !== undefined;
             
-            if (isShiftChar && isActive) {
-                // Only highlight the specific shift-label, not the button
+            if (isShiftChar) {
+                // Handle both press and release of shift characters
                 const targetCode = shiftCharMap[actualKey];
                 keys.forEach(el => {
                     const dataCode = el.getAttribute('data-code');
                     if (dataCode === targetCode) {
                         const shiftLabel = el.querySelector('.shift-label');
                         if (shiftLabel) {
-                            el.classList.add('shift-active');
+                            if (isActive) {
+                                el.classList.add('shift-active');
+                            } else {
+                                el.classList.remove('shift-active');
+                            }
                         }
                     }
                 });
-                // Return early to prevent button activation for shift characters
+                // Log and return early to prevent button activation for shift characters
                 if (isActive) {
                     log.innerText = `Last Event: Code=${code}, Key=${actualKey}`;
                 }
                 return;
-            } else if (!isActive && !isShiftChar) {
-                // Remove shift-active from all when key is released
-                keys.forEach(el => {
-                    el.classList.remove('shift-active');
-                });
             }
             
             // Track shift key state, but only activate shift button if pressed alone (not for special chars)
@@ -614,11 +616,6 @@
                 // This allows shift to be highlighted when pressed by itself
             }
             
-            // Prevent default behavior for some keys to keep focus on window
-            if(["Tab", "AltLeft", "AltRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
-                e.preventDefault();
-            }
-
             // Layer 2 key mapping - maps layer 2 keycodes to their base layer keys
             const layer2Mapping = {
                 'F1': 'Digit1',
@@ -691,8 +688,13 @@
                 const layer2BaseKey = layer2Mapping[code];
                 if (layer2BaseKey) {
                     if ((dataCode === layer2BaseKey) || (dataKey === layer2BaseKey)) {
-                        if (isActive) el.classList.add('layer2-active');
-                        else el.classList.remove('layer2-active');
+                        if (isActive) {
+                            el.classList.add('layer2-active');
+                            el.classList.add('active');
+                        } else {
+                            el.classList.remove('layer2-active');
+                            el.classList.remove('active');
+                        }
                     }
                 }
                 
@@ -727,17 +729,16 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            e.stopPropagation();
             if (!e.repeat) highlightKey(e, true);
         });
 
         document.addEventListener('keyup', (e) => {
-            e.stopPropagation();
             highlightKey(e, false);
         });
 
         // Mouse button detection
         document.addEventListener('mousedown', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             // e.button: 0 = left, 1 = middle, 2 = right
             const buttonMap = { 0: 1, 1: 3, 2: 2 }; // Map to QMK button numbers
@@ -745,6 +746,7 @@
         });
 
         document.addEventListener('mouseup', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             const buttonMap = { 0: 1, 1: 3, 2: 2 };
             highlightMouseButton(buttonMap[e.button], false);
@@ -753,10 +755,12 @@
         // Click listener for manual testing (touchscreen support)
         keys.forEach(k => {
             k.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 k.classList.add('active');
             });
             k.addEventListener('mouseup', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 k.classList.remove('active');
             });
