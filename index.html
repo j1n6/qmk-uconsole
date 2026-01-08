@@ -63,6 +63,23 @@
             transform: translateY(2px);
         }
 
+        /* D-Pad left/right should maintain vertical centering when active */
+        .key-left.active {
+            transform: translateY(-50%);
+        }
+
+        .key-right.active {
+            transform: translateY(-50%);
+        }
+
+        .key-down.active {
+            transform: translateX(-50%);
+        }
+
+        .key-up.active {
+            transform: translateX(-50%);
+        }
+
         /* Specific Layout Groups */
         .top-section {
             display: flex;
@@ -77,14 +94,17 @@
         /* Gamepad D-Pad Layout */
         .d-pad {
             position: relative;
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .d-pad .key { position: absolute; }
-        .key-up { top: 0; left: 40px; }
-        .key-down { bottom: 0; left: 40px; }
-        .key-left { top: 40px; left: 0; }
-        .key-right { top: 40px; right: 0; }
+        .key-up { top: -5px; left: 50%; transform: translateX(-50%);}
+        .key-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .key-left { top: calc(50% - 2px); left: 0; transform: translateY(-50%); }
+        .key-right { top: calc(50% - 2px); right: 0; transform: translateY(-50%); }
 
         /* Shoulder Buttons */
         .shoulders {
@@ -130,15 +150,15 @@
 </head>
 <body>
 
-    <h1>keyboard tester</h1>
+    <h1>uConsole Keyboard Tester</h1>
 
     <div class="keyboard-container">
         <div class="top-section">
             <div class="d-pad">
-                <div class="key" data-code="ArrowUp">0</div>
-                <div class="key key-left" data-code="ArrowLeft">0</div>
-                <div class="key key-right" data-code="ArrowRight">0</div>
-                <div class="key key-down" data-code="ArrowDown">0</div>
+                <div class="key key-up" data-code="ArrowUp">↑</div>
+                <div class="key key-left" data-code="ArrowLeft">←</div>
+                <div class="key key-right" data-code="ArrowRight">→</div>
+                <div class="key key-down" data-code="ArrowDown">↓</div>
             </div>
 
             <div class="shoulders">
@@ -245,8 +265,13 @@
         const log = document.getElementById('log');
 
         function highlightKey(e, isActive) {
-            const code = e.code;
-            const key = e.key.toLowerCase();
+            let code = e.code;
+            let key = e.key ? e.key.toLowerCase() : '';
+
+            // Map custom JS_4 joystick event to Fn for visualization
+            if (code === 'QK_JOYSTICK_BUTTON_4' || key === 'qk_joystick_button_4') {
+                key = 'fn';
+            }
             
             // Prevent default behavior for some keys to keep focus on window
             if(["Tab", "AltLeft", "AltRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
