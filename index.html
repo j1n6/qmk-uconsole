@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uConsole Keyboard Tester</title>
+    <style>
+        body {
+            background-color: #dcdcdc; /* Matches the grey background */
+            font-family: 'Courier New', Courier, monospace; /* Retro terminal font */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Container to hold the specific layout */
+        .keyboard-container {
+            position: relative;
+            width: 800px;
+            padding: 20px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+            gap: 6px;
+        }
+
+        /* Key Styling */
+        .key {
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            box-shadow: 2px 2px 0px #888;
+            color: #000;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: default;
+            transition: all 0.05s;
+            padding: 0 5px;
+        }
+
+        /* Active/Pressed State */
+        .key.active {
+            background-color: #4CAF50; /* Green highlight on press */
+            color: white;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+            transform: translateY(2px);
+        }
+
+        /* Specific Layout Groups */
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; /* Align bottom of top section */
+            margin-bottom: 15px;
+            padding: 0 40px;
+            height: 120px;
+            position: relative;
+        }
+
+        /* Gamepad D-Pad Layout */
+        .d-pad {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .d-pad .key { position: absolute; }
+        .key-up { top: 0; left: 40px; }
+        .key-down { bottom: 0; left: 40px; }
+        .key-left { top: 40px; left: 0; }
+        .key-right { top: 40px; right: 0; }
+
+        /* Shoulder Buttons */
+        .shoulders {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px; /* Push them up slightly relative to others */
+        }
+
+        /* Gamepad ABXY Layout */
+        .abxy {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .abxy .key { position: absolute; }
+        .key-x { top: 0; right: 20px; } /* X is usually top on standard layout, image shows X top rightish? layout varies by model, mapped visually */
+        .key-y { top: 0; left: 20px; }
+        .key-a { bottom: 20px; right: 0; }
+        .key-b { bottom: 20px; left: 0; }
+        
+        /* Adjusting positions based on exact image pixels approximation */
+        .abxy .key-y { top: 0; left: 0; }
+        .abxy .key-x { top: 0; left: 50px; }
+        .abxy .key-b { top: 50px; left: 15px; }
+        .abxy .key-a { top: 50px; left: 65px; }
+
+
+        /* Key Sizes */
+        .w-1-5 { min-width: 60px; }
+        .w-2 { min-width: 80px; }
+        .w-space { min-width: 280px; }
+        
+        /* Utility */
+        .spacer { width: 40px; }
+
+        /* Log area for debugging */
+        #log {
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>keyboard tester</h1>
+
+    <div class="keyboard-container">
+        <div class="top-section">
+            <div class="d-pad">
+                <div class="key" data-code="ArrowUp">0</div>
+                <div class="key key-left" data-code="ArrowLeft">0</div>
+                <div class="key key-right" data-code="ArrowRight">0</div>
+                <div class="key key-down" data-code="ArrowDown">0</div>
+            </div>
+
+            <div class="shoulders">
+                <div class="key" style="margin-right: 20px; margin-top: -40px;" data-key="l">L</div>
+                <div class="key" style="margin-top: 20px;" data-key="r">R</div>
+            </div>
+
+            <div class="abxy">
+                <div class="key key-y" data-key="y">Y</div>
+                <div class="key key-x" data-key="x">X</div>
+                <div class="key key-b" data-key="b">B</div>
+                <div class="key key-a" data-key="a">A</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="key w-1-5" data-code="Escape">Esc</div>
+            <div class="key w-1-5" data-key="select">Select</div>
+            <div class="key w-1-5" data-key="start">Start</div>
+            
+            <div class="spacer" style="width: 100px;"></div> <div class="key" data-key="vol">Vol</div>
+            <div class="key" data-code="BracketLeft">[</div>
+            <div class="key" data-code="BracketRight">]</div>
+            <div class="key" data-code="Slash">/</div>
+            <div class="key" data-code="Minus">-</div>
+            <div class="key" data-code="Equal">=</div>
+            <div class="key" data-code="Backslash">\</div>
+        </div>
+
+        <div class="row">
+            <div class="key" data-code="Backquote">~</div>
+            <div class="key" data-code="Digit1">1</div>
+            <div class="key" data-code="Digit2">2</div>
+            <div class="key" data-code="Digit3">3</div>
+            <div class="key" data-code="Digit4">4</div>
+            <div class="key" data-code="Digit5">5</div>
+            <div class="key" data-code="Digit6">6</div>
+            <div class="key" data-code="Digit7">7</div>
+            <div class="key" data-code="Digit8">8</div>
+            <div class="key" data-code="Digit9">9</div>
+            <div class="key" data-code="Digit0">0</div>
+            <div class="key w-2" data-code="Backspace">Backspace</div>
+        </div>
+
+        <div class="row">
+            <div class="key w-1-5" data-code="Tab">Tab</div>
+            <div class="key" data-code="KeyQ">Q</div>
+            <div class="key" data-code="KeyW">W</div>
+            <div class="key" data-code="KeyE">E</div>
+            <div class="key" data-code="KeyR">R</div>
+            <div class="key" data-code="KeyT">T</div>
+            <div class="key" data-code="KeyY">Y</div>
+            <div class="key" data-code="KeyU">U</div>
+            <div class="key" data-code="KeyI">I</div>
+            <div class="key" data-code="KeyO">O</div>
+            <div class="key" data-code="KeyP">P</div>
+        </div>
+
+        <div class="row">
+            <div class="key" data-code="Quote">'</div>
+            <div class="key" data-code="KeyA">A</div>
+            <div class="key" data-code="KeyS">S</div>
+            <div class="key" data-code="KeyD">D</div>
+            <div class="key" data-code="KeyF">F</div>
+            <div class="key" data-code="KeyG">G</div>
+            <div class="key" data-code="KeyH">H</div>
+            <div class="key" data-code="KeyJ">J</div>
+            <div class="key" data-code="KeyK">K</div>
+            <div class="key" data-code="KeyL">L</div>
+            <div class="key" data-code="Semicolon">;</div>
+            <div class="key w-2" data-code="Enter">Enter</div>
+        </div>
+
+        <div class="row">
+            <div class="key w-1-5" data-code="ShiftLeft">Shift</div>
+            <div class="key" data-code="KeyZ">Z</div>
+            <div class="key" data-code="KeyX">X</div>
+            <div class="key" data-code="KeyC">C</div>
+            <div class="key" data-code="KeyV">V</div>
+            <div class="key" data-code="KeyB">B</div>
+            <div class="key" data-code="KeyN">N</div>
+            <div class="key" data-code="KeyM">M</div>
+            <div class="key" data-code="Comma">&lt;</div>
+            <div class="key" data-code="Period">&gt;</div>
+            <div class="key w-1-5" data-code="ShiftRight">Shift</div>
+        </div>
+
+        <div class="row">
+            <div class="key" data-key="fn">Fn</div>
+            <div class="key" data-code="ControlLeft">Ctrl</div>
+            <div class="key" data-code="AltLeft">Alt</div>
+            <div class="key w-space" data-code="Space">Space</div>
+            <div class="key" data-code="AltRight">Alt</div>
+            <div class="key" data-code="ControlRight">Ctrl</div>
+            <div class="key" data-key="fn">Fn</div>
+        </div>
+    </div>
+
+    <div id="log">Press keys to test...</div>
+
+    <script>
+        // Select logic
+        const keys = document.querySelectorAll('.key');
+        const log = document.getElementById('log');
+
+        function highlightKey(e, isActive) {
+            const code = e.code;
+            const key = e.key.toLowerCase();
+            
+            // Prevent default behavior for some keys to keep focus on window
+            if(["Tab", "AltLeft", "AltRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
+                e.preventDefault();
+            }
+
+            keys.forEach(el => {
+                const dataCode = el.getAttribute('data-code');
+                const dataKey = el.getAttribute('data-key');
+
+                // Check match by Code (physical location) OR Key (value)
+                // We prioritize code for standard keys, key value for others
+                if (dataCode === code) {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                } 
+                // Fallback for special mapped keys (like Gamepad X/Y mapping to keyboard keys)
+                else if (dataKey && dataKey === key) {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            });
+
+            if(isActive) {
+                log.innerText = `Last Event: Code=${code}, Key=${key}`;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!e.repeat) highlightKey(e, true);
+        });
+
+        document.addEventListener('keyup', (e) => {
+            highlightKey(e, false);
+        });
+
+        // Click listener for manual testing (touchscreen support)
+        keys.forEach(k => {
+            k.addEventListener('mousedown', () => k.classList.add('active'));
+            k.addEventListener('mouseup', () => k.classList.remove('active'));
+            k.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                k.classList.add('active');
+            });
+            k.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                k.classList.remove('active');
+            });
+        });
+
+    </script>
+</body>
+</html>
