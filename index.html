@@ -330,10 +330,10 @@
             </div>
 
             <div class="abxy">
-                <div class="key key-y" data-key="QK_JOYSTICK_BUTTON_1">Y</div>
-                <div class="key key-x" data-key="QK_JOYSTICK_BUTTON_0">X</div>
-                <div class="key key-b" data-key="QK_JOYSTICK_BUTTON_2">B</div>
-                <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_3">A</div>
+                <div class="key key-y" data-key="QK_JOYSTICK_BUTTON_3">Y</div>
+                <div class="key key-x" data-key="QK_JOYSTICK_BUTTON_2">X</div>
+                <div class="key key-b" data-key="QK_JOYSTICK_BUTTON_1">B</div>
+                <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_0">A</div>
                 <div class="key key-middle-mouse" data-mouse="3">
                     <div class="scroll-indicator scroll-up">▲</div>
                     M
@@ -471,10 +471,10 @@
                         if (isPressed !== wasPressed) {
                             // Button state changed
                             const buttonMap = {
-                                0: 'QK_JOYSTICK_BUTTON_2', // B
-                                1: 'QK_JOYSTICK_BUTTON_3', // A
-                                2: 'QK_JOYSTICK_BUTTON_1', // Y
-                                3: 'QK_JOYSTICK_BUTTON_0', // X
+                                0: 'QK_JOYSTICK_BUTTON_0', // A
+                                1: 'QK_JOYSTICK_BUTTON_1', // B
+                                2: 'QK_JOYSTICK_BUTTON_2', // X
+                                3: 'QK_JOYSTICK_BUTTON_3', // Y
                                 4: 'QK_JOYSTICK_BUTTON_4', // Select
                                 5: 'QK_JOYSTICK_BUTTON_5'  // Start
                             };
@@ -646,10 +646,10 @@
             
             // Map keyboard keys to joystick buttons for testing
             const joystickKeyMapping = {
-                'KeyY': 'QK_JOYSTICK_BUTTON_1', // Y button
-                'KeyX': 'QK_JOYSTICK_BUTTON_0', // X button  
-                'KeyB': 'QK_JOYSTICK_BUTTON_2', // B button
-                'KeyA': 'QK_JOYSTICK_BUTTON_3', // A button
+                'KeyY': 'QK_JOYSTICK_BUTTON_3', // Y button
+                'KeyX': 'QK_JOYSTICK_BUTTON_2', // X button  
+                'KeyB': 'QK_JOYSTICK_BUTTON_1', // B button
+                'KeyA': 'QK_JOYSTICK_BUTTON_0', // A button
             };
 
             const isLayer2Key = layer2Mapping[code] !== undefined;
