@@ -62,7 +62,7 @@
             top: 2px;
             left: 3px;
             font-size: 8px;
-            color: #ff8c00;
+            color: #d97300;
             font-weight: normal;
             pointer-events: none;
         }
@@ -72,13 +72,17 @@
             font-weight: bold;
         }
 
+        .layer2-active {
+            border: 1px solid #4CAF50;
+        }
+
         /* Shift label */
         .shift-label {
             position: absolute;
             top: 2px;
             right: 3px;
             font-size: 10px;
-            color: #666;
+            color: #191919;
             font-weight: bold;
             pointer-events: none;
         }
@@ -86,6 +90,10 @@
         .shift-active .shift-label {
             color: #ff0000;
             font-weight: bold;
+        }
+
+        .shift-active {
+            border: 1px solid #ff0000;
         }
 
         /* Active/Pressed State */
@@ -322,10 +330,10 @@
             </div>
 
             <div class="abxy">
-                <div class="key key-y" data-key="QK_JOYSTICK_BUTTON_1">Y</div>
-                <div class="key key-x" data-key="QK_JOYSTICK_BUTTON_0">X</div>
-                <div class="key key-b" data-key="QK_JOYSTICK_BUTTON_2">B</div>
-                <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_3">A</div>
+                <div class="key key-y" data-key="QK_JOYSTICK_BUTTON_3">Y</div>
+                <div class="key key-x" data-key="QK_JOYSTICK_BUTTON_2">X</div>
+                <div class="key key-b" data-key="QK_JOYSTICK_BUTTON_1">B</div>
+                <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_0">A</div>
                 <div class="key key-middle-mouse" data-mouse="3">
                     <div class="scroll-indicator scroll-up">▲</div>
                     M
@@ -336,8 +344,8 @@
 
         <div class="row">
             <div class="key w-1-5" data-code="Escape"><span class="layer2-label">Lock</span>Esc</div>
-            <div class="key w-1-5" data-key="select"><span class="layer2-label">Prt</span>Select</div>
-            <div class="key w-1-5" data-key="start"><span class="layer2-label">Pause</span>Start</div>
+            <div class="key w-1-5" data-key="QK_JOYSTICK_BUTTON_4"><span class="layer2-label">Prt</span>Select</div>
+            <div class="key w-1-5" data-key="QK_JOYSTICK_BUTTON_5"><span class="layer2-label">Pause</span>Start</div>
             
             <div class="spacer" style="width: 100px;"></div> <div class="key" data-key="vol">Vol</div>
             <div class="key" data-code="BracketLeft"><span class="shift-label">{</span>[</div>
@@ -384,9 +392,9 @@
             <div class="key" data-code="KeyD">D</div>
             <div class="key" data-code="KeyF">F</div>
             <div class="key" data-code="KeyG">G</div>
-            <div class="key" data-code="KeyH">H</div>
-            <div class="key" data-code="KeyJ">J</div>
-            <div class="key" data-code="KeyK">K</div>
+            <div class="key" data-code="KeyH"><span class="layer2-label">Home</span>H</div>
+            <div class="key" data-code="KeyJ"><span class="layer2-label">End</span>J</div>
+            <div class="key" data-code="KeyK"><span class="layer2-label">PgDn</span>K</div>
             <div class="key" data-code="KeyL">L</div>
             <div class="key" data-code="Semicolon"><span class="shift-label">:</span>;</div>
             <div class="key w-2" data-code="Enter">Enter</div>
@@ -419,7 +427,7 @@
 
     <div id="log">Press keys to test...</div>
 
-    <div style="margin-top: 10px; color: #888; font-size: 11px; text-align: left; max-width: 600px;">
+    <div style="margin-top: 10px; color: #323232; font-size: 11px; text-align: left; max-width: 600px;">
         <strong>Note:</strong> FN keys highlight when Layer 2 functions are active (F1-F12, Delete, Caps, etc.), 
         indicating the momentary layer switch is engaged.
     </div>
@@ -434,6 +442,92 @@
         let cursorMoveTimeout;
         let scrollTimeout;
         let shiftPressed = false;
+        let capsLockActive = false;
+        let gamepadIndex = null;
+        let gamepadButtonStates = {};
+
+        // Gamepad API detection
+        window.addEventListener('gamepadconnected', (e) => {
+            gamepadIndex = e.gamepad.index;
+            log.innerText = `Gamepad connected: ${e.gamepad.id}`;
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            gamepadIndex = null;
+            log.innerText = 'Gamepad disconnected';
+        });
+
+        // Poll gamepad state
+        function pollGamepad() {
+            const gamepads = navigator.getGamepads();
+            
+            // Auto-reconnect logic: try to find a connected gamepad
+            if (gamepadIndex === null || !gamepads[gamepadIndex]) {
+                // Look for any connected gamepad
+                for (let i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i]) {
+                        gamepadIndex = i;
+                        log.innerText = `Gamepad reconnected: ${gamepads[i].id}`;
+                        break;
+                    }
+                }
+            }
+            
+            if (gamepadIndex !== null) {
+                const gamepad = gamepads[gamepadIndex];
+                
+                if (gamepad) {
+                    // Check each button (0-3 for X, Y, B, A)
+                    gamepad.buttons.forEach((button, index) => {
+                        const isPressed = button.pressed;
+                        const wasPressed = gamepadButtonStates[index] || false;
+                        
+                        if (isPressed !== wasPressed) {
+                            // Button state changed
+                            const buttonMap = {
+                                0: 'QK_JOYSTICK_BUTTON_0', // A
+                                1: 'QK_JOYSTICK_BUTTON_1', // B
+                                2: 'QK_JOYSTICK_BUTTON_2', // X
+                                3: 'QK_JOYSTICK_BUTTON_3', // Y
+                                4: 'QK_JOYSTICK_BUTTON_4', // Select
+                                5: 'QK_JOYSTICK_BUTTON_5'  // Start
+                            };
+                            
+                            const buttonKey = buttonMap[index];
+                            if (buttonKey) {
+                                highlightJoystickButton(buttonKey, isPressed);
+                            }
+                            
+                            gamepadButtonStates[index] = isPressed;
+                        }
+                    });
+                } else {
+                    // Gamepad at index is no longer valid
+                    gamepadIndex = null;
+                }
+            }
+            requestAnimationFrame(pollGamepad);
+        }
+        
+        // Start polling
+        pollGamepad();
+
+        function highlightJoystickButton(buttonKey, isActive) {
+            keys.forEach(el => {
+                const dataKey = el.getAttribute('data-key');
+                if (dataKey === buttonKey) {
+                    if (isActive) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                }
+            });
+            
+            if (isActive) {
+                log.innerText = `Last Event: Joystick Button ${buttonKey}`;
+            }
+        }
 
         // Cursor movement detection
         document.addEventListener('mousemove', () => {
@@ -490,8 +584,28 @@
         });
 
         function highlightKey(e, isActive) {
+            // Prevent all default browser actions for keys
+            e.preventDefault();
+            
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
+            
+            // Always sync Caps Lock state on every key event
+            const currentCapsLockState = e.getModifierState('CapsLock');
+            if (currentCapsLockState !== capsLockActive) {
+                capsLockActive = currentCapsLockState;
+                // Update the Tab button to reflect current Caps Lock state
+                keys.forEach(el => {
+                    const dataCode = el.getAttribute('data-code');
+                    if (dataCode === 'Tab') {
+                        if (capsLockActive) {
+                            el.classList.add('layer2-active');
+                        } else {
+                            el.classList.remove('layer2-active');
+                        }
+                    }
+                });
+            }
             
             // Map of shift characters to their base key codes
             const shiftCharMap = {
@@ -506,27 +620,41 @@
             const actualKey = e.key;
             const isShiftChar = shiftCharMap[actualKey] !== undefined;
             
-            if (isShiftChar && isActive) {
-                // Only highlight the specific shift-label, not the button
+            if (isShiftChar) {
+                // Handle both press and release of shift characters
                 const targetCode = shiftCharMap[actualKey];
                 keys.forEach(el => {
                     const dataCode = el.getAttribute('data-code');
                     if (dataCode === targetCode) {
                         const shiftLabel = el.querySelector('.shift-label');
                         if (shiftLabel) {
-                            el.classList.add('shift-active');
+                            if (isActive) {
+                                el.classList.add('shift-active');
+                            } else {
+                                el.classList.remove('shift-active');
+                            }
+                        }
+                    }
+                    // Remove shift key highlighting when shift character is active
+                    if (dataCode === 'ShiftLeft' || dataCode === 'ShiftRight') {
+                        if (isActive) {
+                            el.classList.remove('active');
                         }
                     }
                 });
-                // Return early to prevent button activation for shift characters
+                // Log and return early to prevent button activation for shift characters
                 if (isActive) {
                     log.innerText = `Last Event: Code=${code}, Key=${actualKey}`;
                 }
                 return;
-            } else if (!isActive && !isShiftChar) {
-                // Remove shift-active from all when key is released
+            }
+            
+            // On key release, also remove shift-active from any key that might have it
+            if (!isActive) {
                 keys.forEach(el => {
-                    el.classList.remove('shift-active');
+                    if (el.classList.contains('shift-active')) {
+                        el.classList.remove('shift-active');
+                    }
                 });
             }
             
@@ -537,11 +665,29 @@
                 // This allows shift to be highlighted when pressed by itself
             }
             
-            // Prevent default behavior for some keys to keep focus on window
-            if(["Tab", "AltLeft", "AltRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(code)) {
-                e.preventDefault();
+            // Handle Caps Lock toggle state
+            if (code === 'CapsLock') {
+                // Use actual system Caps Lock state instead of toggling
+                capsLockActive = e.getModifierState('CapsLock');
+                
+                // Always keep Caps Lock button highlighted when caps is on
+                keys.forEach(el => {
+                    const dataCode = el.getAttribute('data-code');
+                    const layer2BaseKey = 'Tab'; // CapsLock maps to Tab
+                    if (dataCode === layer2BaseKey) {
+                        if (capsLockActive) {
+                            el.classList.add('layer2-active');
+                        } else {
+                            el.classList.remove('layer2-active');
+                        }
+                    }
+                });
+                if (isActive) {
+                    log.innerText = `Last Event: Code=${code}, CapsLock=${capsLockActive ? 'ON' : 'OFF'}`;
+                }
+                return; // Don't process CapsLock as a normal key
             }
-
+            
             // Layer 2 key mapping - maps layer 2 keycodes to their base layer keys
             const layer2Mapping = {
                 'F1': 'Digit1',
@@ -559,6 +705,9 @@
                 'Delete': 'Backspace',
                 'CapsLock': 'Tab',
                 'PageUp': 'KeyU',
+                'Home': 'KeyH',
+                'End': 'KeyJ',
+                'PageDown': 'KeyK',
                 'Insert': 'KeyI',
                 'PrintScreen': 'select',
                 'Pause': 'start',
@@ -566,21 +715,40 @@
                 'BrightnessDown': 'Comma',
                 'BrightnessUp': 'Period'
             };
+            
+            // Map keyboard keys to joystick buttons for testing
+            const joystickKeyMapping = {
+                'KeyY': 'QK_JOYSTICK_BUTTON_3', // Y button
+                'KeyX': 'QK_JOYSTICK_BUTTON_2', // X button  
+                'KeyB': 'QK_JOYSTICK_BUTTON_1', // B button
+                'KeyA': 'QK_JOYSTICK_BUTTON_0', // A button
+            };
 
             const isLayer2Key = layer2Mapping[code] !== undefined;
+            
+            // Check if this is a joystick button mapped to keyboard
+            const joystickButton = joystickKeyMapping[code];
+            if (joystickButton && e.shiftKey) {
+                // Shift+X/Y/A/B triggers joystick button
+                keys.forEach(el => {
+                    const dataKey = el.getAttribute('data-key');
+                    if (dataKey === joystickButton) {
+                        if (isActive) el.classList.add('active');
+                        else el.classList.remove('active');
+                    }
+                });
+                if (isActive) {
+                    log.innerText = `Last Event: Joystick ${joystickButton}`;
+                }
+                return;
+            }
 
             keys.forEach(el => {
                 const dataCode = el.getAttribute('data-code');
                 const dataKey = el.getAttribute('data-key');
 
-                // Check match by Code (physical location) OR Key (value)
-                // We prioritize code for standard keys, key value for others
+                // Check match by Code (physical location)
                 if (dataCode === code) {
-                    if (isActive) el.classList.add('active');
-                    else el.classList.remove('active');
-                } 
-                // Fallback for special mapped keys (like Gamepad X/Y mapping to keyboard keys)
-                else if (dataKey && dataKey === key) {
                     if (isActive) el.classList.add('active');
                     else el.classList.remove('active');
                 }
@@ -595,9 +763,22 @@
                 const layer2BaseKey = layer2Mapping[code];
                 if (layer2BaseKey) {
                     if ((dataCode === layer2BaseKey) || (dataKey === layer2BaseKey)) {
-                        if (isActive) el.classList.add('layer2-active');
-                        else el.classList.remove('layer2-active');
+                        if (isActive) {
+                            el.classList.add('layer2-active');
+                        } else {
+                            el.classList.remove('layer2-active');
+                        }
                     }
+                }
+                
+                // Handle special button mappings (PrintScreen->Select, Pause->Start)
+                if (code === 'PrintScreen' && dataKey === 'QK_JOYSTICK_BUTTON_4') {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+                if (code === 'Pause' && dataKey === 'QK_JOYSTICK_BUTTON_5') {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
                 }
             });
 
@@ -621,17 +802,16 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            e.stopPropagation();
             if (!e.repeat) highlightKey(e, true);
         });
 
         document.addEventListener('keyup', (e) => {
-            e.stopPropagation();
             highlightKey(e, false);
         });
 
         // Mouse button detection
         document.addEventListener('mousedown', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             // e.button: 0 = left, 1 = middle, 2 = right
             const buttonMap = { 0: 1, 1: 3, 2: 2 }; // Map to QMK button numbers
@@ -639,18 +819,26 @@
         });
 
         document.addEventListener('mouseup', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             const buttonMap = { 0: 1, 1: 3, 2: 2 };
             highlightMouseButton(buttonMap[e.button], false);
         });
 
+        // Prevent context menu on right click
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
         // Click listener for manual testing (touchscreen support)
         keys.forEach(k => {
             k.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 k.classList.add('active');
             });
             k.addEventListener('mouseup', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 k.classList.remove('active');
             });
