@@ -14,6 +14,20 @@ Unlike the standard QMK repository, this project isolates the uConsole keyboard 
 * **Streamlined CI/CD:** Simple workflows for rebuilding and releasing binaries.
 * **Low Barrier to Entry:** Easier for community members to contribute layouts without learning the entire QMK ecosystem.
 
+## 🧪 Keyboard Tester
+
+Test your uConsole keyboard layout and functionality with our interactive keyboard tester:
+
+**[https://j1n6.github.io/qmk-uconsole/](https://j1n6.github.io/qmk-uconsole/)**
+
+This web-based tool provides:
+* **Visual Feedback:** See which keys are being pressed in real-time
+* **Layer Detection:** Shows Layer 2 (Fn) key combinations
+* **D-Pad & Gamepad Testing:** Test arrow keys, joystick buttons (X, Y, A, B), and mouse buttons (L, R, Middle)
+* **Scroll & Cursor Tracking:** Visualize trackball movement and scroll events
+
+Perfect for verifying your firmware installation and familiarizing yourself with the uConsole's unique keyboard layout!
+
 
 ## 🎯 How to Install
 These steps need to be operated on your uConsole. 
@@ -39,5 +53,16 @@ sudo ./maple_upload ttyACM0 2 1EAF:0003 clockworkpi_uconsole_default.bin`
  sudo dfu-util -w -d 1eaf:0003 -a 2 -D clockworkpi_uconsole_default.bin -R
 ```
  
-## 🤝 Acknowledgments
+## 📜 License
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+
+You are free to use, modify, and distribute this software under the terms of the GPL-3.0 license. Any derivative works must also be distributed under the same license terms.
+
+For the full license text, see the [LICENSE](LICENSE) file in this repository or visit [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
+
+**Note:** This firmware is provided "as is" without warranty of any kind. Use at your own risk.
+
+
+#### 🤝 Acknowledgments
 Special thanks to **[oesmith](https://github.com/oesmith/qmk_firmware)** for the initial groundwork and porting the base layout to the uConsole hardware.
