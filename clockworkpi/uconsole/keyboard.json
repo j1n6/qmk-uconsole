@@ -1,8 +1,15 @@
 {
     "manufacturer": "Clockwork",
     "keyboard_name": "uConsole Keyboard",
-    "maintainer": "oesmith",
+    "maintainer": "j1n6",
+    "backlight": {
+        "levels": 3,
+        "pin": "A8"
+    },
     "bootloader": "stm32duino",
+    "build": {
+        "debounce_type": "asym_eager_defer_pk"
+    },
     "diode_direction": "COL2ROW",
     "features": {
         "backlight": true,
@@ -17,43 +24,37 @@
         "nkro": true,
         "pointing_device": true
     },
-    "backlight": {
-      "pin": "A8",
-      "levels": 3
-    },
-    "build": {
-        "debounce_type": "asym_eager_defer_pk"
-    },
     "joystick": {
-      "button_count": 6,
-      "axis_resolution": 8,
-      "axes": {
-        "x": "virtual",
-        "y": "virtual"
-      },
-      "driver": "digital"
+        "axes": {
+            "x": "virtual",
+            "y": "virtual"
+        },
+        "axis_resolution": 8,
+        "button_count": 6,
+        "driver": "digital"
     },
     "matrix_pins": {
-      "rows": ["NO_PIN", "NO_PIN", "NO_PIN", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"],
-      "cols": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"],
-      "direct": [
-          ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7"],
-          ["B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15"],
-          ["C12", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
-          ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"]
-      ]
+        "cols": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"],
+        "direct": [
+            ["B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7"],
+            ["B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15"],
+            ["C12", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"],
+            ["NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN", "NO_PIN"]
+        ],
+        "rows": ["NO_PIN", "NO_PIN", "NO_PIN", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"]
     },
     "processor": "STM32F103",
     "url": "https://clockworkpi.com/uconsole",
     "usb": {
         "device_version": "1.0.0",
+        "max_power": 100,
         "pid": "0x0000",
         "vid": "0xFEED"
     },
