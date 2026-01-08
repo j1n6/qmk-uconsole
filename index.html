@@ -477,8 +477,12 @@
                                 3: 'QK_JOYSTICK_BUTTON_3', // A
                                 4: 'QK_JOYSTICK_BUTTON_4', // Select
                                 5: 'QK_JOYSTICK_BUTTON_5'  // Start
+                            };
+                            
+                            const buttonKey = buttonMap[index];
+                            if (buttonKey) {
+                                highlightJoystickButton(buttonKey, isPressed);
                             }
-                            highlightJoystickButton(buttonKey, isPressed);
                             
                             gamepadButtonStates[index] = isPressed;
                         }
