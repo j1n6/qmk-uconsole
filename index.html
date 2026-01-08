@@ -590,25 +590,21 @@
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
             
-            // Always sync Caps Lock state on every key event
-            // For CapsLock key itself, check on keyup for accurate state
-            const shouldCheckCapsLock = code !== 'CapsLock' || !isActive;
-            if (shouldCheckCapsLock) {
-                const currentCapsLockState = e.getModifierState('CapsLock');
-                if (currentCapsLockState !== capsLockActive) {
-                    capsLockActive = currentCapsLockState;
-                    // Update the Tab button to reflect current Caps Lock state
-                    keys.forEach(el => {
-                        const dataCode = el.getAttribute('data-code');
-                        if (dataCode === 'Tab') {
-                            if (capsLockActive) {
-                                el.classList.add('layer2-active');
-                            } else {
-                                el.classList.remove('layer2-active');
-                            }
+            // Always sync Caps Lock state based on system status
+            const currentCapsLockState = e.getModifierState('CapsLock');
+            if (currentCapsLockState !== capsLockActive) {
+                capsLockActive = currentCapsLockState;
+                // Update the Tab button to reflect current Caps Lock state
+                keys.forEach(el => {
+                    const dataCode = el.getAttribute('data-code');
+                    if (dataCode === 'Tab') {
+                        if (capsLockActive) {
+                            el.classList.add('layer2-active');
+                        } else {
+                            el.classList.remove('layer2-active');
                         }
-                    });
-                }
+                    }
+                });
             }
             
             // Map of shift characters to their base key codes
@@ -667,30 +663,6 @@
                 shiftPressed = isActive;
                 // Don't return here, let it continue to normal key highlighting
                 // This allows shift to be highlighted when pressed by itself
-            }
-            
-            // Handle Caps Lock toggle state
-            if (code === 'CapsLock') {
-                // On keydown, the state hasn't toggled yet, so wait for keyup
-                if (!isActive) {
-                    // Use actual system Caps Lock state on keyup
-                    capsLockActive = e.getModifierState('CapsLock');
-                    
-                    // Update the Tab button to reflect current Caps Lock state
-                    keys.forEach(el => {
-                        const dataCode = el.getAttribute('data-code');
-                        const layer2BaseKey = 'Tab'; // CapsLock maps to Tab
-                        if (dataCode === layer2BaseKey) {
-                            if (capsLockActive) {
-                                el.classList.add('layer2-active');
-                            } else {
-                                el.classList.remove('layer2-active');
-                            }
-                        }
-                    });
-                    log.innerText = `Last Event: Code=${code}, CapsLock=${capsLockActive ? 'ON' : 'OFF'}`;
-                }
-                return; // Don't process CapsLock as a normal key
             }
             
             // Layer 2 key mapping - maps layer 2 keycodes to their base layer keys
