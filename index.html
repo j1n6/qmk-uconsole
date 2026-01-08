@@ -574,9 +574,21 @@
             let code = e.code;
             let key = e.key ? e.key.toLowerCase() : '';
             
-            // Debug logging for brightness keys
-            if (code && (code.includes('Brightness') || e.key.includes('Brightness'))) {
-                console.log('Brightness key detected:', { code, key: e.key, keyCode: e.keyCode, which: e.which });
+            // Always sync Caps Lock state on every key event
+            const currentCapsLockState = e.getModifierState('CapsLock');
+            if (currentCapsLockState !== capsLockActive) {
+                capsLockActive = currentCapsLockState;
+                // Update the Tab button to reflect current Caps Lock state
+                keys.forEach(el => {
+                    const dataCode = el.getAttribute('data-code');
+                    if (dataCode === 'Tab') {
+                        if (capsLockActive) {
+                            el.classList.add('layer2-active');
+                        } else {
+                            el.classList.remove('layer2-active');
+                        }
+                    }
+                });
             }
             
             // Map of shift characters to their base key codes
@@ -607,12 +619,27 @@
                             }
                         }
                     }
+                    // Remove shift key highlighting when shift character is active
+                    if (dataCode === 'ShiftLeft' || dataCode === 'ShiftRight') {
+                        if (isActive) {
+                            el.classList.remove('active');
+                        }
+                    }
                 });
                 // Log and return early to prevent button activation for shift characters
                 if (isActive) {
                     log.innerText = `Last Event: Code=${code}, Key=${actualKey}`;
                 }
                 return;
+            }
+            
+            // On key release, also remove shift-active from any key that might have it
+            if (!isActive) {
+                keys.forEach(el => {
+                    if (el.classList.contains('shift-active')) {
+                        el.classList.remove('shift-active');
+                    }
+                });
             }
             
             // Track shift key state, but only activate shift button if pressed alone (not for special chars)
@@ -624,10 +651,9 @@
             
             // Handle Caps Lock toggle state
             if (code === 'CapsLock') {
-                if (isActive) {
-                    // Toggle caps lock state on press
-                    capsLockActive = !capsLockActive;
-                }
+                // Use actual system Caps Lock state instead of toggling
+                capsLockActive = e.getModifierState('CapsLock');
+                
                 // Always keep Caps Lock button highlighted when caps is on
                 keys.forEach(el => {
                     const dataCode = el.getAttribute('data-code');
@@ -635,10 +661,8 @@
                     if (dataCode === layer2BaseKey) {
                         if (capsLockActive) {
                             el.classList.add('layer2-active');
-                            el.classList.add('active');
                         } else {
                             el.classList.remove('layer2-active');
-                            el.classList.remove('active');
                         }
                     }
                 });
@@ -725,10 +749,8 @@
                     if ((dataCode === layer2BaseKey) || (dataKey === layer2BaseKey)) {
                         if (isActive) {
                             el.classList.add('layer2-active');
-                            el.classList.add('active');
                         } else {
                             el.classList.remove('layer2-active');
-                            el.classList.remove('active');
                         }
                     }
                 }
