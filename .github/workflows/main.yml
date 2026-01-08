@@ -10,15 +10,16 @@ jobs:
     steps:
     - uses: actions/checkout@master
     
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi git python3-pip
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get -y install gcc unzip wget zip gcc-avr binutils-avr avr-libc dfu-programmer dfu-util gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi git python3-pip
     
     - name: Install QMK CLI
       run: |
         curl -fsSL https://install.qmk.fm | sh
         echo "/home/runner/.local/bin" >> $GITHUB_PATH
+        echo "/home/runner/.local/share/uv/tools/qmk/bin/" >> $GITHUB_PATH
     
     - name: Init Submodules
       run: |
@@ -26,13 +27,13 @@ jobs:
 
     - name: Install QMK CLI
       run: |
-        cd qmk_firmware && 3 | /home/runner/.local/bin/qmk setup
+        cd qmk_firmware && 3 | qmk setup
     
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
     
     - name: Build firmware hex distribution
-      run: cd qmk_firmware && /home/runner/.local/bin/qmk compile -kb clockworkpi/uconsole -km default
+      run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
       
     - name: Upload artifact
       uses: actions/upload-artifact@master
