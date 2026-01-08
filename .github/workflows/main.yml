@@ -27,7 +27,9 @@ jobs:
     
     - name: Install QMK CLI
       run: |
-        cd qmk_firmware && /home/runner/.local/bin/qmk setup
+        cd qmk_firmware && /home/runner/.local/bin/qmk setup << 'EOF'
+        3
+        EOF
     
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
