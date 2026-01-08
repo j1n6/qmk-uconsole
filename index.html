@@ -72,6 +72,10 @@
             font-weight: bold;
         }
 
+        .layer2-active {
+            border: 1px solid #4CAF50;
+        }
+
         /* Shift label */
         .shift-label {
             position: absolute;
@@ -86,6 +90,10 @@
         .shift-active .shift-label {
             color: #ff0000;
             font-weight: bold;
+        }
+
+        .shift-active {
+            border: 1px solid #ff0000;
         }
 
         /* Active/Pressed State */
@@ -336,8 +344,8 @@
 
         <div class="row">
             <div class="key w-1-5" data-code="Escape"><span class="layer2-label">Lock</span>Esc</div>
-            <div class="key w-1-5" data-key="select"><span class="layer2-label">Prt</span>Select</div>
-            <div class="key w-1-5" data-key="start"><span class="layer2-label">Pause</span>Start</div>
+            <div class="key w-1-5" data-key="QK_JOYSTICK_BUTTON_4"><span class="layer2-label">Prt</span>Select</div>
+            <div class="key w-1-5" data-key="QK_JOYSTICK_BUTTON_5"><span class="layer2-label">Pause</span>Start</div>
             
             <div class="spacer" style="width: 100px;"></div> <div class="key" data-key="vol">Vol</div>
             <div class="key" data-code="BracketLeft"><span class="shift-label">{</span>[</div>
@@ -434,6 +442,71 @@
         let cursorMoveTimeout;
         let scrollTimeout;
         let shiftPressed = false;
+        let gamepadIndex = null;
+        let gamepadButtonStates = {};
+
+        // Gamepad API detection
+        window.addEventListener('gamepadconnected', (e) => {
+            gamepadIndex = e.gamepad.index;
+            log.innerText = `Gamepad connected: ${e.gamepad.id}`;
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            gamepadIndex = null;
+            log.innerText = 'Gamepad disconnected';
+        });
+
+        // Poll gamepad state
+        function pollGamepad() {
+            if (gamepadIndex !== null) {
+                const gamepads = navigator.getGamepads();
+                const gamepad = gamepads[gamepadIndex];
+                
+                if (gamepad) {
+                    // Check each button (0-3 for X, Y, B, A)
+                    gamepad.buttons.forEach((button, index) => {
+                        const isPressed = button.pressed;
+                        const wasPressed = gamepadButtonStates[index] || false;
+                        
+                        if (isPressed !== wasPressed) {
+                            // Button state changed
+                            const buttonMap = {
+                                0: 'QK_JOYSTICK_BUTTON_0', // X
+                                1: 'QK_JOYSTICK_BUTTON_1', // Y
+                                2: 'QK_JOYSTICK_BUTTON_2', // B
+                                3: 'QK_JOYSTICK_BUTTON_3', // A
+                                4: 'QK_JOYSTICK_BUTTON_4', // Select
+                                5: 'QK_JOYSTICK_BUTTON_5'  // Start
+                            }
+                            highlightJoystickButton(buttonKey, isPressed);
+                            
+                            gamepadButtonStates[index] = isPressed;
+                        }
+                    });
+                }
+            }
+            requestAnimationFrame(pollGamepad);
+        }
+        
+        // Start polling
+        pollGamepad();
+
+        function highlightJoystickButton(buttonKey, isActive) {
+            keys.forEach(el => {
+                const dataKey = el.getAttribute('data-key');
+                if (dataKey === buttonKey) {
+                    if (isActive) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                }
+            });
+            
+            if (isActive) {
+                log.innerText = `Last Event: Joystick Button ${buttonKey}`;
+            }
+        }
 
         // Cursor movement detection
         document.addEventListener('mousemove', () => {
@@ -566,21 +639,40 @@
                 'BrightnessDown': 'Comma',
                 'BrightnessUp': 'Period'
             };
+            
+            // Map keyboard keys to joystick buttons for testing
+            const joystickKeyMapping = {
+                'KeyY': 'QK_JOYSTICK_BUTTON_1', // Y button
+                'KeyX': 'QK_JOYSTICK_BUTTON_0', // X button  
+                'KeyB': 'QK_JOYSTICK_BUTTON_2', // B button
+                'KeyA': 'QK_JOYSTICK_BUTTON_3', // A button
+            };
 
             const isLayer2Key = layer2Mapping[code] !== undefined;
+            
+            // Check if this is a joystick button mapped to keyboard
+            const joystickButton = joystickKeyMapping[code];
+            if (joystickButton && e.shiftKey) {
+                // Shift+X/Y/A/B triggers joystick button
+                keys.forEach(el => {
+                    const dataKey = el.getAttribute('data-key');
+                    if (dataKey === joystickButton) {
+                        if (isActive) el.classList.add('active');
+                        else el.classList.remove('active');
+                    }
+                });
+                if (isActive) {
+                    log.innerText = `Last Event: Joystick ${joystickButton}`;
+                }
+                return;
+            }
 
             keys.forEach(el => {
                 const dataCode = el.getAttribute('data-code');
                 const dataKey = el.getAttribute('data-key');
 
-                // Check match by Code (physical location) OR Key (value)
-                // We prioritize code for standard keys, key value for others
+                // Check match by Code (physical location)
                 if (dataCode === code) {
-                    if (isActive) el.classList.add('active');
-                    else el.classList.remove('active');
-                } 
-                // Fallback for special mapped keys (like Gamepad X/Y mapping to keyboard keys)
-                else if (dataKey && dataKey === key) {
                     if (isActive) el.classList.add('active');
                     else el.classList.remove('active');
                 }
@@ -598,6 +690,16 @@
                         if (isActive) el.classList.add('layer2-active');
                         else el.classList.remove('layer2-active');
                     }
+                }
+                
+                // Handle special button mappings (PrintScreen->Select, Pause->Start)
+                if (code === 'PrintScreen' && dataKey === 'QK_JOYSTICK_BUTTON_4') {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+                if (code === 'Pause' && dataKey === 'QK_JOYSTICK_BUTTON_5') {
+                    if (isActive) el.classList.add('active');
+                    else el.classList.remove('active');
                 }
             });
 
