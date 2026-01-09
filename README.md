@@ -106,6 +106,9 @@ Don't panic if your keyboard becomes unresponsive! Follow these steps to restore
    **Note:** You may need to try this several times. Keep the S1 pin shorted while running the command.
 
 4. **Verify:** Once successful, your keyboard should be responsive again. You can then re-flash QMK if needed.
+
+## ☕ Support My Work
+If you like my work, please consider [Buy me a Coffee](https://www.paypal.com/donate?token=0VRjowcZ_vZADGjy8UpFzoxQ9fgRgK27nz7Aw80MCTsNo8EzsxBGzcvTxYOGbU9r9nCraSPyB9LN4_Nn). Thank you.
  
  
 ## 📜 License
@@ -121,3 +124,4 @@ For the full license text, see the [LICENSE](LICENSE) file in this repository or
 
 #### 🤝 Acknowledgments
 Special thanks to **[oesmith](https://github.com/oesmith/qmk_firmware)** for the initial groundwork and porting the base layout to the uConsole hardware.
+
