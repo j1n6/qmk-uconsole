@@ -7,7 +7,7 @@
  * @brief Initializes the trackball hardware, GPIOs, and interrupts.
  * Configures the pins for the trackball axis inputs and enables edge-triggered events.
  */
-void pointing_device_driver_init(void);
+bool pointing_device_driver_init(void);
 
 /**
  * @brief Calculates and returns the mouse report.
