@@ -128,9 +128,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       return false;
     case MO(LY1):
-      // Fn key toggles scroll mode (trackball scrolling)
-      select_button_pressed = record->event.pressed;
+      // Fn: only perform normal layer switching; do not toggle scroll mode
       return true;  // Allow normal layer switching to continue
+    case JS_4:
+      // Select key enables scroll mode while held (preserve tap behavior)
+      select_button_pressed = record->event.pressed;
+      return true;
     case JS_LEFT:
       joystick_set_axis(1, record->event.pressed ? -127 : 0);
       return false;
