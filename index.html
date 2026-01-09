@@ -290,6 +290,27 @@
             bottom: -25px;
         }
 
+        .scroll-left {
+            top: 50%;
+            left: -25px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 8px;
+            min-width: 20px;
+            flex-direction: row;
+        }
+
+        .scroll-right {
+            top: 50%;
+            right: -25px;
+            left: auto;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 8px;
+            min-width: 20px;
+            flex-direction: row;
+        }
+
         .scroll-indicator.active {
             background-color: #4CAF50;
         }
@@ -336,7 +357,9 @@
                 <div class="key key-a" data-key="QK_JOYSTICK_BUTTON_0">A</div>
                 <div class="key key-middle-mouse" data-mouse="3">
                     <div class="scroll-indicator scroll-up">▲</div>
+                    <div class="scroll-indicator scroll-left">◄</div>
                     M
+                    <div class="scroll-indicator scroll-right">►</div>
                     <div class="scroll-indicator scroll-down">▼</div>
                 </div>
             </div>
@@ -439,6 +462,8 @@
         const middleMouseButton = document.querySelector('.key-middle-mouse');
         const scrollUpIndicator = document.querySelector('.scroll-up');
         const scrollDownIndicator = document.querySelector('.scroll-down');
+        const scrollLeftIndicator = document.querySelector('.scroll-left');
+        const scrollRightIndicator = document.querySelector('.scroll-right');
         let cursorMoveTimeout;
         let scrollTimeout;
         let shiftPressed = false;
@@ -628,34 +653,28 @@
                 // Scrolling up
                 scrollUpIndicator.classList.add('active');
                 scrollDownIndicator.classList.remove('active');
-                // Highlight FN keys
-                keys.forEach(el => {
-                    if (el.getAttribute('data-key') === 'fn') {
-                        el.classList.add('active');
-                    }
-                });
             } else if (e.deltaY > 0) {
                 // Scrolling down
                 scrollDownIndicator.classList.add('active');
                 scrollUpIndicator.classList.remove('active');
-                // Highlight FN keys
-                keys.forEach(el => {
-                    if (el.getAttribute('data-key') === 'fn') {
-                        el.classList.add('active');
-                    }
-                });
+            }
+
+            if (e.deltaX < 0) {
+                // Scrolling left
+                scrollLeftIndicator.classList.add('active');
+                scrollRightIndicator.classList.remove('active');
+            } else if (e.deltaX > 0) {
+                // Scrolling right
+                scrollRightIndicator.classList.add('active');
+                scrollLeftIndicator.classList.remove('active');
             }
             
             // Reset after 150ms
             scrollTimeout = setTimeout(() => {
                 scrollUpIndicator.classList.remove('active');
                 scrollDownIndicator.classList.remove('active');
-                // Remove FN key highlight
-                keys.forEach(el => {
-                    if (el.getAttribute('data-key') === 'fn') {
-                        el.classList.remove('active');
-                    }
-                });
+                scrollLeftIndicator.classList.remove('active');
+                scrollRightIndicator.classList.remove('active');
             }, 150);
         });
 
