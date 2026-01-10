@@ -24,15 +24,15 @@ static int8_t distances[AXIS_NUM] = {0};
 static rate_meter_t rate_meters[AXIS_NUM] = {0};
 static glider_t gliders[AXIS_NUM] = {0};
 
-static const int8_t WHEEL_DENOM = 2; // Decrease this (e.g., to 1) for faster scrolling
-static int8_t wheel_buffer[AXIS_NUM] = {0};
+static const int16_t WHEEL_DENOM = 24; // Finer grain control for "High Res" feel
+static int16_t wheel_buffer[AXIS_NUM] = {0};
 
 // Natural Acceleration Curve: High precision at low speeds, power curve at high speeds
 static float rateToVelocityCurve(float input) {
     float abs_input = fabsf(input);
-    if (abs_input < 0.05f) return 0;
+    if (abs_input < 0.02f) return 0; // Lower deadzone for finer control
 
-    float x = abs_input - 0.05f;
+    float x = abs_input - 0.02f;
     // Polynomial acceleration (x^1.5) for natural feel over long distances
     float accel = powf(x, 1.5f) / 40.0f;
     float linear = x / 20.0f;
@@ -44,8 +44,8 @@ static void trackball_move(uint8_t axis, int8_t direction) {
   // Always update distances[], regardless of the mode
   distances[axis] += direction;
 
-  // Only run mouse movement-specific updates in MODE_MOUSE
-  if (last_mode != MODE_WHEEL) {
+  // Always run glider/rate meter updates to allow momentum in both modes
+  {
     rate_meter_interrupt(&rate_meters[axis]);
     glider_set_direction(&gliders[axis], direction);
 
@@ -122,9 +122,11 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
       distances[AXIS_Y] = 0;
       break;
     case MODE_WHEEL:
-      // Accumulate trackball movement into wheel buffer to handle fractional scrolls
-      wheel_buffer[AXIS_X] += distances[AXIS_X];
-      wheel_buffer[AXIS_Y] += distances[AXIS_Y];
+      // Use glider for smoothed momentum scrolling
+      // Accumulate smoothed movement into wheel buffer
+      // Note: We use the same gliders as mouse mode for consistent feel
+      wheel_buffer[AXIS_X] += glider_glide(&gliders[AXIS_X], (uint8_t)delta);
+      wheel_buffer[AXIS_Y] += glider_glide(&gliders[AXIS_Y], (uint8_t)delta);
       
       // Calculate scroll amount from accumulated buffer
       h = wheel_buffer[AXIS_X] / WHEEL_DENOM;
@@ -134,7 +136,7 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
       wheel_buffer[AXIS_X] -= h * WHEEL_DENOM;
       wheel_buffer[AXIS_Y] -= v * WHEEL_DENOM;
       
-      // Clear raw distances after moving to buffer
+      // Clear raw distances (consumed by glider logic in trackball_move/glider_glide updates)
       distances[AXIS_X] = 0;
       distances[AXIS_Y] = 0;
       break;
