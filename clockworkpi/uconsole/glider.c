@@ -36,19 +36,18 @@ void glider_stop(glider_t* gr) {
 int8_t glider_glide(glider_t* gr, uint8_t delta) {
   bool already_stopped = gr->speed == 0;
 
-  // Accumulate velocity into error buffer
-  gr->error += gr->speed * (float)delta;
-  
+  // Accumulate velocity into error buffer (use a local float for delta)
+  float fdelta = (float)delta;
+  gr->error += gr->speed * fdelta;
+
   int8_t distance = 0;
-  
-  // Pixel-perfect precision: Only move when we have a full integer
-  // Using floorf ensures we don't "jump" ahead of the actual physical movement
-  if (gr->error >= 1.0f) {
-    distance = (int8_t)floorf(gr->error);
-  } else if (gr->error <= -1.0f) {
-    distance = (int8_t)ceilf(gr->error); 
+
+  // Use simple cast instead of floorf/ceilf: casting to int truncates toward zero,
+  // which equals floor for positive values and ceil for negative values — matching previous logic.
+  if (gr->error >= 1.0f || gr->error <= -1.0f) {
+    distance = (int8_t)gr->error;
   }
-  
+
   // Remove the integer part we are reporting, keep the remainder in gr->error
   gr->error -= (float)distance;
 

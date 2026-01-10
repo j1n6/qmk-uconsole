@@ -24,8 +24,8 @@ static int8_t distances[AXIS_NUM] = {0};
 static rate_meter_t rate_meters[AXIS_NUM] = {0};
 static glider_t gliders[AXIS_NUM] = {0};
 
-static const int8_t WHEEL_DENOM = 2; // Decrease this (e.g., to 1) for faster scrolling
-static int8_t wheel_buffer[AXIS_NUM] = {0};
+static const int16_t WHEEL_DENOM = 2; // Decrease this (e.g., to 1) for faster scrolling
+static int16_t wheel_buffer[AXIS_NUM] = {0};
 
 // Natural Acceleration Curve: High precision at low speeds, power curve at high speeds
 static float rateToVelocityCurve(float input) {

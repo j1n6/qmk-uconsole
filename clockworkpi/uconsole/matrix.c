@@ -39,9 +39,11 @@ static const pin_t matrix_col_pins[] = MATRIX_COL_PINS;
 #endif
 
 /* Small settling delay (tune if needed for reliable reads). */
+/* Small settling delay (tune if needed for reliable reads).
+ * Use `wait_us` where available rather than a busy nop loop.
+ */
 static inline void small_delay(void) {
-    volatile uint32_t i;
-    for (i = 0; i < 200; i++) { __asm__ volatile("nop"); }
+    wait_us(30);
 }
 
 /* Keep previous matrix to report changes (matrix_scan_custom must return true if changed). */

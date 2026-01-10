@@ -14,7 +14,7 @@ void rate_meter_interrupt(rate_meter_t* rm) {
   rm->cutoff = timeout_reset();
 }
 
-void rate_meter_tick(rate_meter_t* rm, unsigned long delta) {
+void rate_meter_tick(rate_meter_t* rm, millis_t delta) {
   rm->cutoff = timeout_update(rm->cutoff, delta);
   if (!timeout_get(rm->cutoff)) {
     // Gradually increase average_delta when no movement is detected to slow down glide
