@@ -27,6 +27,18 @@ static glider_t gliders[AXIS_NUM] = {0};
 static const int16_t WHEEL_DENOM = 24; // Finer grain control for "High Res" feel
 static int16_t wheel_buffer[AXIS_NUM] = {0};
 
+// Anti-rebound / Consistency Filter
+// Low threshold to catch rebounds even on short movements
+#define TB_LOCK_THRESHOLD 3
+// Very low correction limit: just suppresses the immediate incorrect tick(s)
+// without creating a "fighting" sensation when intentionally changing direction.
+#define TB_CORRECT_LIMIT 1
+
+static int16_t consecutive_steps[AXIS_NUM] = {0};
+static int8_t  locked_direction[AXIS_NUM] = {0};
+static int8_t  correction_count[AXIS_NUM] = {0};
+static uint16_t last_axis_activity[AXIS_NUM] = {0};
+
 // Natural Acceleration Curve: High precision at low speeds, power curve at high speeds
 static float rateToVelocityCurve(float input) {
     float abs_input = fabsf(input);
@@ -41,6 +53,44 @@ static float rateToVelocityCurve(float input) {
 }
 
 static void trackball_move(uint8_t axis, int8_t direction) {
+  // Check for idle reset
+  uint16_t now = timer_read();
+  if (TIMER_DIFF_16(now, last_axis_activity[axis]) > 200) {
+      consecutive_steps[axis] = 0;
+      locked_direction[axis] = 0;
+      correction_count[axis] = 0;
+  }
+  last_axis_activity[axis] = now;
+
+  // Anti-rebound Filter
+  bool is_reverse = (locked_direction[axis] != 0) && (direction != locked_direction[axis]);
+  if (is_reverse) {
+      if (consecutive_steps[axis] >= TB_LOCK_THRESHOLD) {
+          if (correction_count[axis] < TB_CORRECT_LIMIT) {
+              direction = locked_direction[axis];
+              correction_count[axis]++;
+              consecutive_steps[axis]++;
+          } else {
+              locked_direction[axis] = direction;
+              consecutive_steps[axis] = 1;
+              correction_count[axis] = 0;
+          }
+      } else {
+          locked_direction[axis] = direction;
+          consecutive_steps[axis] = 1;
+          correction_count[axis] = 0;
+      }
+  } else {
+      if (direction == locked_direction[axis]) {
+          if (consecutive_steps[axis] < 32000) consecutive_steps[axis]++;
+          correction_count[axis] = 0;
+      } else {
+          locked_direction[axis] = direction;
+          consecutive_steps[axis] = 1;
+          correction_count[axis] = 0;
+      }
+  }
+
   // Always update distances[], regardless of the mode
   distances[axis] += direction;
 
@@ -109,6 +159,8 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     wheel_buffer[AXIS_Y] = 0;
     distances[AXIS_X] = 0;
     distances[AXIS_Y] = 0;
+    consecutive_steps[AXIS_X] = 0; locked_direction[AXIS_X] = 0; correction_count[AXIS_X] = 0;
+    consecutive_steps[AXIS_Y] = 0; locked_direction[AXIS_Y] = 0; correction_count[AXIS_Y] = 0;
   } else {
     rate_meter_tick(&rate_meters[AXIS_X], delta);
     rate_meter_tick(&rate_meters[AXIS_Y], delta);
