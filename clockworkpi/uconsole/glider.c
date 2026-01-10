@@ -45,7 +45,13 @@ int8_t glider_glide(glider_t* gr, uint8_t delta) {
   // Use simple cast instead of floorf/ceilf: casting to int truncates toward zero,
   // which equals floor for positive values and ceil for negative values — matching previous logic.
   if (gr->error >= 1.0f || gr->error <= -1.0f) {
-    distance = (int8_t)gr->error;
+    if (gr->error > 127.0f) {
+      distance = 127;
+    } else if (gr->error < -127.0f) {
+      distance = -127;
+    } else {
+      distance = (int8_t)gr->error;
+    }
   }
 
   // Remove the integer part we are reporting, keep the remainder in gr->error
