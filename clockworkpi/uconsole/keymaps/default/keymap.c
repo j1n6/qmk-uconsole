@@ -127,8 +127,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         is_locked = !is_locked;
       }
       return false;
+    case MO(LY1):
+      // Fn: only perform normal layer switching; do not toggle scroll mode
+      return true;  // Allow normal layer switching to continue
     case JS_4:
-      // Select key toggles scroll mode (trackball scrolling)
+      // Select key enables scroll mode while held (preserve tap behavior)
       select_button_pressed = record->event.pressed;
       return true;
     case JS_LEFT:
