@@ -30,14 +30,18 @@ static int16_t wheel_buffer[AXIS_NUM] = {0};
 // Anti-rebound / Consistency Filter
 // Low threshold to catch rebounds even on short movements
 #define TB_LOCK_THRESHOLD 3
-// Increased correction limit (2) to absorb double-tick noise bursts which are common
-// with this sensor, ensuring smoothest possible glide.
-#define TB_CORRECT_LIMIT 2
+// Dynamic Noise Protection
+#define NOISE_MODE_TIMEOUT 2000 // 2000ms of protection after a detected bounce
 
 static int16_t consecutive_steps[AXIS_NUM] = {0};
 static int8_t  locked_direction[AXIS_NUM] = {0};
 static int8_t  correction_count[AXIS_NUM] = {0};
 static uint16_t last_axis_activity[AXIS_NUM] = {0};
+
+// State for dynamic protection
+static uint16_t noise_mode_start[AXIS_NUM] = {0};
+static int8_t   previous_stable_direction[AXIS_NUM] = {0};
+
 
 // Natural Acceleration Curve: High precision at low speeds, power curve at high speeds
 static float rateToVelocityCurve(float input) {
@@ -59,43 +63,61 @@ static void trackball_move(uint8_t axis, int8_t direction) {
       consecutive_steps[axis] = 0;
       locked_direction[axis] = 0;
       correction_count[axis] = 0;
+      // Reset protection state on idle
+      noise_mode_start[axis] = 0; 
   }
   last_axis_activity[axis] = now;
 
-  // Anti-rebound Filter
+  // Track the last "stable" direction (sustained movement)
+  // This helps us detect when we have returned to the valid path after a potential glitch.
+  if (consecutive_steps[axis] >= TB_LOCK_THRESHOLD) {
+      previous_stable_direction[axis] = locked_direction[axis];
+  }
+
+  // Dynamic Noise Mode:
+  // If we recently detected bouncing behavior, we enable the filter.
+  // Otherwise, we prioritize precision (limit = 0).
+  // Check if within timeout period (handle wrap-around safely with DIFF)
+  bool noise_mode_active = (noise_mode_start[axis] != 0) && 
+                           (TIMER_DIFF_16(now, noise_mode_start[axis]) < NOISE_MODE_TIMEOUT);
+
+
   bool is_reverse = (locked_direction[axis] != 0) && (direction != locked_direction[axis]);
 
-  // SCENARIO 1 & 3: Axis Flipping / Rebound Filtering
-  // The EVQWJN007 sensor is prone to reporting reversed direction when the ball is 
-  // shifted slightly (0.01mm) at the edge of a stroke or when pressure is applied.
-  // This can happen on X or Y axis independently.
-  //
-  // STRATEGY: DROP NOISE (Do not invent data)
-  // If we have established momentum (consecutive_steps >= threshold), and detect a sudden reversal,
-  // we assume it is noise and DROP the packet entirely.
-  // - This prevents the "Glider Stop" (Zig-Zag) because we don't send the reverse signal.
-  // - This prevents "Jumping Around" because we don't substitute fake forward motion.
-  // - The cursor simply "Coasts" over the noise.
-
   if (is_reverse) {
+      // 1. Determine Filtering Limit based on Mode & Speed
+      int8_t limit = 0;
+      if (noise_mode_active) {
+          // In protection mode: use 1 tick for low speed, 2 for high speed
+          limit = (gliders[axis].speed > 1.5f) ? 2 : 1;
+      }
+
+      // 2. Apply Filter if we have momentum
       if (consecutive_steps[axis] >= TB_LOCK_THRESHOLD) {
-          // Dynamic Limit:
-          // Low Speed: 1 tick check (Fast response for precision)
-          // High Speed: 2 tick check (Suppress mechanical bounce)
-          int8_t limit = (gliders[axis].speed > 1.5f) ? 2 : 1;
-          
           if (correction_count[axis] < limit) {
-              // IGNORE this event. Treat it as if the hardware never triggered.
+              // DROPPING NOISE
               correction_count[axis]++;
+              // Extend protection - we are actively catching noise
+              noise_mode_start[axis] = now; 
               return; 
           } else {
-              // Limit exceeded, accept the reversal as valid user intent
+              // Limit exceeded or Limit was 0 - Accept Reversal.
               locked_direction[axis] = direction;
               consecutive_steps[axis] = 1;
               correction_count[axis] = 0;
           }
       } else {
-          // Not enough momentum to filter, accept immediately (allows micro-adjustments)
+          // 3. Reversal without Momentum (or after momentum was broken by a glitch)
+          // This is where we DETECT bounces.
+          // If we are reversing back to the "Stable Direction" after a very short deviation,
+          // it strongly suggests the previous deviation was a bounce.
+          if (consecutive_steps[axis] < TB_LOCK_THRESHOLD) {
+             if (direction == previous_stable_direction[axis]) {
+                 // Detected return to stability -> Enable Protection for future
+                 noise_mode_start[axis] = now;
+             }
+          }
+          
           locked_direction[axis] = direction;
           consecutive_steps[axis] = 1;
           correction_count[axis] = 0;
