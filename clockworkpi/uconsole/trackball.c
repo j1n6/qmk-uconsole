@@ -30,9 +30,9 @@ static int16_t wheel_buffer[AXIS_NUM] = {0};
 // Anti-rebound / Consistency Filter
 // Low threshold to catch rebounds even on short movements
 #define TB_LOCK_THRESHOLD 3
-// Very low correction limit: just suppresses the immediate incorrect tick(s)
-// without creating a "fighting" sensation when intentionally changing direction.
-#define TB_CORRECT_LIMIT 1
+// Increased correction limit (2) to absorb double-tick noise bursts which are common
+// with this sensor, ensuring smoothest possible glide.
+#define TB_CORRECT_LIMIT 2
 
 static int16_t consecutive_steps[AXIS_NUM] = {0};
 static int8_t  locked_direction[AXIS_NUM] = {0};
@@ -64,27 +64,49 @@ static void trackball_move(uint8_t axis, int8_t direction) {
 
   // Anti-rebound Filter
   bool is_reverse = (locked_direction[axis] != 0) && (direction != locked_direction[axis]);
+
+  // SCENARIO 1 & 3: Axis Flipping / Rebound Filtering
+  // The EVQWJN007 sensor is prone to reporting reversed direction when the ball is 
+  // shifted slightly (0.01mm) at the edge of a stroke or when pressure is applied.
+  // This can happen on X or Y axis independently.
+  //
+  // STRATEGY: DROP NOISE (Do not invent data)
+  // If we have established momentum (consecutive_steps >= threshold), and detect a sudden reversal,
+  // we assume it is noise and DROP the packet entirely.
+  // - This prevents the "Glider Stop" (Zig-Zag) because we don't send the reverse signal.
+  // - This prevents "Jumping Around" because we don't substitute fake forward motion.
+  // - The cursor simply "Coasts" over the noise.
+
   if (is_reverse) {
       if (consecutive_steps[axis] >= TB_LOCK_THRESHOLD) {
-          if (correction_count[axis] < TB_CORRECT_LIMIT) {
-              direction = locked_direction[axis];
+          // Dynamic Limit:
+          // Low Speed: 1 tick check (Fast response for precision)
+          // High Speed: 2 tick check (Suppress mechanical bounce)
+          int8_t limit = (gliders[axis].speed > 1.5f) ? 2 : 1;
+          
+          if (correction_count[axis] < limit) {
+              // IGNORE this event. Treat it as if the hardware never triggered.
               correction_count[axis]++;
-              consecutive_steps[axis]++;
+              return; 
           } else {
+              // Limit exceeded, accept the reversal as valid user intent
               locked_direction[axis] = direction;
               consecutive_steps[axis] = 1;
               correction_count[axis] = 0;
           }
       } else {
+          // Not enough momentum to filter, accept immediately (allows micro-adjustments)
           locked_direction[axis] = direction;
           consecutive_steps[axis] = 1;
           correction_count[axis] = 0;
       }
   } else {
+      // Continuing same direction
       if (direction == locked_direction[axis]) {
           if (consecutive_steps[axis] < 32000) consecutive_steps[axis]++;
           correction_count[axis] = 0;
       } else {
+          // First move from rest
           locked_direction[axis] = direction;
           consecutive_steps[axis] = 1;
           correction_count[axis] = 0;
