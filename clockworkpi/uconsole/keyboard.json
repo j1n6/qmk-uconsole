@@ -3,7 +3,6 @@
     "keyboard_name": "uConsole Keyboard",
     "maintainer": "j1n6",
     "backlight": {
-        "levels": 3,
         "pin": "A8"
     },
     "bootloader": "stm32duino",
@@ -54,7 +53,6 @@
     "url": "https://clockworkpi.com/uconsole",
     "usb": {
         "device_version": "1.0.0",
-        "max_power": 100,
         "pid": "0x0000",
         "vid": "0xFEED"
     },

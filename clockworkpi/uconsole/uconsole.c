@@ -29,3 +29,44 @@ void bootloader_jump(void) {
     clear_bootloader_flag();
     NVIC_SystemReset();
 }
+
+#ifdef BACKLIGHT_ENABLE
+#    include <hal.h>
+#    define USER_PWM_MODE PWM_OUTPUT_ACTIVE_HIGH
+
+static PWMConfig pwmCFG = {
+    .frequency = 10000000, // 10MHz counter frequency
+    .period    = 2000,     // 2000 ticks period -> 5kHz PWM frequency (200us)
+    .callback  = NULL,
+    .channels  = {
+        {USER_PWM_MODE, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL}
+    },
+    .cr2       = 0,
+#    if defined(STM32_PWM_USE_ADVANCED) && STM32_PWM_USE_ADVANCED
+    .bdtr = 0,
+#    endif
+    .dier = 0
+};
+
+void backlight_init_ports(void) {
+    palSetPadMode(GPIOA, 8, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+    pwmStart(&PWMD1, &pwmCFG);
+}
+
+void backlight_set(uint8_t level) {
+    if (level == 0) {
+        pwmDisableChannel(&PWMD1, 0);
+    } else if (level == 1) {
+        // Step 1: 500/2000 = 25% duty cycle
+        pwmEnableChannel(&PWMD1, 0, 500); 
+    } else {
+        // Step 2: 2000/2000 = 100% duty cycle
+        pwmEnableChannel(&PWMD1, 0, 2000);
+    }
+}
+
+void backlight_task(void) {}
+#endif
