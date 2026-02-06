@@ -36,4 +36,8 @@ void pointing_device_driver_set_cpi(uint16_t cpi);
  */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record);
 
+/* Precision mode toggle: when true, cursor movement is reduced for fine control.
+ * Toggled by holding Select and clicking the trackball middle button.
+ */
+extern volatile bool precision_mode;
 #endif /* TRACKBALL_H */
