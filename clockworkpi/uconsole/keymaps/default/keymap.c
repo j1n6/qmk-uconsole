@@ -115,6 +115,8 @@ static bool is_locked = false;
 
 // Extern from trackball.c to control scroll mode
 extern volatile bool select_button_pressed;
+// Extern from trackball.c to control precision mode (toggled via Select+MiddleClick)
+extern volatile bool precision_mode;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_locked && keycode != KB_LOCK && keycode != MO(LY1)) {
@@ -133,6 +135,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case JS_4:
       // Select key enables scroll mode while held (preserve tap behavior)
       select_button_pressed = record->event.pressed;
+      return true;
+    case MS_BTN3:
+      // If Select is held while middle button is pressed, toggle precision mode
+      if (record->event.pressed && select_button_pressed) {
+        precision_mode = !precision_mode;
+      }
       return true;
     case JS_LEFT:
       joystick_set_axis(1, record->event.pressed ? -127 : 0);

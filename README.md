@@ -33,6 +33,11 @@ Perfect for verifying your firmware installation and familiarizing yourself with
     * Move Left/Right for Horizontal Scroll
 * **DFU (Bootloader) Mode:** Press `Left Alt` + `Right Alt` + `Start` simultaneously to enter DFU mode.
 
+* **Precision Cursor Mode:** Hold the **Select** key and press the trackball **middle** button to toggle between
+   - **Normal Mode** — regular cursor movement
+   - **Precision Mode** — reduced cursor movement for fine control
+   This provides a quick two-state toggle for precise pointer adjustments.
+
 ## 🎯 Installation Guide
 
 **⚠️ WARNING:** Use SSH or an external keyboard when performing these operations. In case of issues, you'll still be able to interact with the device to re-flash or troubleshoot.
