@@ -65,7 +65,8 @@ enum {
   JS_RGHT,
   JS_UP,
   JS_DOWN,
-  KB_LOCK
+  KB_LOCK,
+  KB_TAP_HOLD      // Toggle tap-hold feature
 };
 
 const key_override_t vol_key_override =
@@ -117,9 +118,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * (Lck)(Prt)(Pau)     (Mut)(   )(   )(   )(F11)(F12)(   )
      * (   )(F1 )(F2 )(F3 )(F4 )(F5 )(F6 )(F7 )(F8 )(F9 )(F10)(Del)
      * (Cap)(   )(   )(   )(   )(   )(   )(PgU)(Ins)(   )(   )
-     * (   )(   )(   )(   )(   )(Tg2)(Hom)(End)(PgD)(   )(   )(   )
-     * (   )(   )(   )(   )(   )(   )(   )(   )(Bdn)(Bup)(   )
-     *  (  )(   )(Cmd)(      BlStp       )(Cmd)(   )(  )
+     * (   )(   )(   )(   )(THd)(Tg2)(Hom)(End)(PgD)(   )(   )(   )
+     * (Hom)(PgD)(   )(   )(   )(Clr)(   )(   )
+     * (   )(   )(Cmd)(      BlStp       )(Cmd)(   )(  )
+     * THd = Tap-Hold Toggle, Clr = EEPROM Clear
      */
 
     [LY1] = LAYOUT(
@@ -130,9 +132,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_PSCR, KC_PAUS, KC_MUTE, _______, _______, _______, KC_F11,  KC_F12,
         KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,
         KC_F9,   KC_F10,  KB_LOCK, KC_CAPS, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______, KC_PGUP, KC_INS,
+        _______, _______, _______, _______, KB_TAP_HOLD, _______, KC_PGUP, KC_INS,
         _______, _______, _______, _______, _______, _______, TG(LY2), KC_HOME,
-        KC_END,  KC_PGDN, _______, _______, _______, _______, _______, _______,
+        KC_END,  KC_PGDN, _______, _______, _______, EE_CLR,  _______, _______,
         _______, _______, KC_BRID, KC_BRIU, _______, _______, _______, _______,
         KC_DEL,  _______, _______, _______, BL_STEP, _______, _______, _______
     ),
@@ -167,6 +169,16 @@ static bool is_locked = false;
 // Extern from trackball.c to control scroll mode
 extern volatile bool select_button_pressed;
 extern volatile bool precision_mode;
+
+// EEPROM Configuration
+typedef union {
+  uint32_t raw;
+  struct {
+    bool tap_hold_enabled :1;  // Bit 0: tap-hold feature enabled/disabled
+  };
+} keyboard_config_t;
+
+keyboard_config_t keyboard_config;
 
 // Tap-hold timing tracking
 #define TAP_HOLD_TIMEOUT 200  // milliseconds
@@ -218,6 +230,17 @@ static int get_tap_hold_index(uint16_t keycode) {
   return -1;
 }
 
+void keyboard_post_init_user(void) {
+  keyboard_config.raw = eeconfig_read_user();
+  // Default to disabled if EEPROM is uninitialized (raw == 0)
+}
+
+void eeconfig_init_user(void) {
+  // Set default EEPROM values
+  keyboard_config.raw = 0;  // Tap-hold disabled by default
+  eeconfig_update_user(keyboard_config.raw);
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_locked && keycode != KB_LOCK && keycode != MO(LY1)) {
     return false;
@@ -225,6 +248,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
   // Handle tap-hold keys
   if (is_tap_hold_key(keycode)) {
+    uint16_t base_key = get_base_keycode(keycode);
+
+    // If tap-hold is disabled, send key normally
+    if (!keyboard_config.tap_hold_enabled) {
+      if (record->event.pressed) {
+        register_code(base_key);
+      } else {
+        unregister_code(base_key);
+      }
+      return false;
+    }
+
+    // Tap-hold is enabled: use timing-based logic
     int index = get_tap_hold_index(keycode);
     if (record->event.pressed) {
       // Key pressed - record the timestamp
@@ -232,7 +268,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     } else {
       // Key released - determine if tap or hold
       uint16_t elapsed = record->event.time - tap_hold_key_press_times[index];
-      uint16_t base_key = get_base_keycode(keycode);
 
       if (elapsed < TAP_HOLD_TIMEOUT) {
         // Tap - send key as-is (lowercase/number)
@@ -253,6 +288,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KB_LOCK:
       if (record->event.pressed) {
         is_locked = !is_locked;
+      }
+      return false;
+    case KB_TAP_HOLD:
+      if (record->event.pressed) {
+        keyboard_config.tap_hold_enabled = !keyboard_config.tap_hold_enabled;
+        eeconfig_update_user(keyboard_config.raw);
       }
       return false;
     case MO(LY1):
