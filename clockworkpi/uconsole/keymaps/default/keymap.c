@@ -10,7 +10,58 @@ enum {
 };
 
 enum {
-  JS_LEFT = SAFE_RANGE,
+  // Tap-Hold keycodes for letters (Tap = lowercase, Hold = uppercase)
+  LH_A = SAFE_RANGE,
+  LH_B,
+  LH_C,
+  LH_D,
+  LH_E,
+  LH_F,
+  LH_G,
+  LH_H,
+  LH_I,
+  LH_J,
+  LH_K,
+  LH_L,
+  LH_M,
+  LH_N,
+  LH_O,
+  LH_P,
+  LH_Q,
+  LH_R,
+  LH_S,
+  LH_T,
+  LH_U,
+  LH_V,
+  LH_W,
+  LH_X,
+  LH_Y,
+  LH_Z,
+  // Tap-Hold keycodes for numbers (Tap = number, Hold = shifted symbol)
+  LH_0,
+  LH_1,
+  LH_2,
+  LH_3,
+  LH_4,
+  LH_5,
+  LH_6,
+  LH_7,
+  LH_8,
+  LH_9,
+  // Tap-Hold keycodes for special characters
+  LH_GRV,   // ` -> ~
+  LH_LBRC,  // [ -> {
+  LH_RBRC,  // ] -> }
+  LH_MINS,  // - -> _
+  LH_EQL,   // = -> +
+  LH_SLSH,  // / -> ?
+  LH_BSLS,  // \ -> |
+  LH_SCLN,  // ; -> :
+  LH_QUOT,  // ' -> "
+  LH_COMM,  // , -> <
+  LH_DOT,   // . -> >
+  // Original keycodes
+  JS_LEFT,
   JS_RGHT,
   JS_UP,
   JS_DOWN,
@@ -46,13 +97,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LSFT, KC_RSFT, KC_LCTL, KC_RCTL, KC_LALT, MS_BTN1, KC_RALT, MS_BTN2,
         MS_BTN3, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,
 
-        JS_4,    JS_5,    KC_VOLD, KC_GRV,  KC_LBRC, KC_RBRC, KC_MINS, KC_EQL,
-        KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,
-        KC_9,    KC_0,    KC_ESC,  KC_TAB,  KC_NO,   KC_NO,   KC_NO,   KC_NO,
-        KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,
-        KC_O,    KC_P,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,
-        KC_J,    KC_K,    KC_L,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,
-        KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_BSLS, KC_SCLN, KC_QUOT,
+        JS_4,    JS_5,    KC_VOLD, LH_GRV,  LH_LBRC, LH_RBRC, LH_MINS, LH_EQL,
+        LH_1,    LH_2,    LH_3,    LH_4,    LH_5,    LH_6,    LH_7,    LH_8,
+        LH_9,    LH_0,    KC_ESC,  KC_TAB,  KC_NO,   KC_NO,   KC_NO,   KC_NO,
+        LH_Q,    LH_W,    LH_E,    LH_R,    LH_T,    LH_Y,    LH_U,    LH_I,
+        LH_O,    LH_P,    LH_A,    LH_S,    LH_D,    LH_F,    LH_G,    LH_H,
+        LH_J,    LH_K,    LH_L,    LH_Z,    LH_X,    LH_C,    LH_V,    LH_B,
+        LH_N,    LH_M,    LH_COMM, LH_DOT,  LH_SLSH, LH_BSLS, LH_SCLN, LH_QUOT,
         KC_BSPC, KC_ENT,  MO(LY1), MO(LY1), KC_SPC,  KC_NO,   KC_NO,   KC_NO
     ),
 
@@ -117,9 +168,85 @@ static bool is_locked = false;
 extern volatile bool select_button_pressed;
 extern volatile bool precision_mode;
 
+// Tap-hold timing tracking
+#define TAP_HOLD_TIMEOUT 200  // milliseconds
+
+// Mapping of tap-hold keycodes to their base keycodes
+static const uint16_t tap_hold_map[][2] = {
+  {LH_A, KC_A},  {LH_B, KC_B},  {LH_C, KC_C},  {LH_D, KC_D},  {LH_E, KC_E},
+  {LH_F, KC_F},  {LH_G, KC_G},  {LH_H, KC_H},  {LH_I, KC_I},  {LH_J, KC_J},
+  {LH_K, KC_K},  {LH_L, KC_L},  {LH_M, KC_M},  {LH_N, KC_N},  {LH_O, KC_O},
+  {LH_P, KC_P},  {LH_Q, KC_Q},  {LH_R, KC_R},  {LH_S, KC_S},  {LH_T, KC_T},
+  {LH_U, KC_U},  {LH_V, KC_V},  {LH_W, KC_W},  {LH_X, KC_X},  {LH_Y, KC_Y},
+  {LH_Z, KC_Z},
+  {LH_0, KC_0},  {LH_1, KC_1},  {LH_2, KC_2},  {LH_3, KC_3},  {LH_4, KC_4},
+  {LH_5, KC_5},  {LH_6, KC_6},  {LH_7, KC_7},  {LH_8, KC_8},  {LH_9, KC_9},
+  {LH_GRV, KC_GRV},   {LH_LBRC, KC_LBRC}, {LH_RBRC, KC_RBRC},
+  {LH_MINS, KC_MINS},  {LH_EQL, KC_EQL},   {LH_SLSH, KC_SLSH},
+  {LH_BSLS, KC_BSLS},  {LH_SCLN, KC_SCLN}, {LH_QUOT, KC_QUOT},
+  {LH_COMM, KC_COMM},  {LH_DOT, KC_DOT},
+};
+
+static uint16_t tap_hold_key_press_times[47] = {0};  // Track press time for each tap-hold key (36 letters/numbers + 11 special chars)
+
+// Helper function to get base keycode from tap-hold keycode
+static uint16_t get_base_keycode(uint16_t keycode) {
+  for (int i = 0; i < 47; i++) {
+    if (tap_hold_map[i][0] == keycode) {
+      return tap_hold_map[i][1];
+    }
+  }
+  return KC_NO;
+}
+
+// Helper function to check if keycode is a tap-hold key
+static bool is_tap_hold_key(uint16_t keycode) {
+  return (keycode >= LH_A && keycode <= LH_9) || (keycode >= LH_GRV && keycode <= LH_DOT);
+}
+
+// Helper function to get the index of a tap-hold key
+static int get_tap_hold_index(uint16_t keycode) {
+  if (keycode >= LH_A && keycode <= LH_Z) {
+    return keycode - LH_A;
+  }
+  if (keycode >= LH_0 && keycode <= LH_9) {
+    return 26 + (keycode - LH_0);
+  }
+  if (keycode >= LH_GRV && keycode <= LH_DOT) {
+    return 36 + (keycode - LH_GRV);
+  }
+  return -1;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_locked && keycode != KB_LOCK && keycode != MO(LY1)) {
     return false;
+  }
+
+  // Handle tap-hold keys
+  if (is_tap_hold_key(keycode)) {
+    int index = get_tap_hold_index(keycode);
+    if (record->event.pressed) {
+      // Key pressed - record the timestamp
+      tap_hold_key_press_times[index] = record->event.time;
+    } else {
+      // Key released - determine if tap or hold
+      uint16_t elapsed = record->event.time - tap_hold_key_press_times[index];
+      uint16_t base_key = get_base_keycode(keycode);
+
+      if (elapsed < TAP_HOLD_TIMEOUT) {
+        // Tap - send key as-is (lowercase/number)
+        register_code(base_key);
+        unregister_code(base_key);
+      } else {
+        // Hold - send shift + key (uppercase/shifted symbol)
+        register_code(KC_LSFT);
+        register_code(base_key);
+        unregister_code(base_key);
+        unregister_code(KC_LSFT);
+      }
+    }
+    return false;  // Don't let QMK handle this key
   }
 
   switch (keycode) {

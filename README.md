@@ -28,6 +28,16 @@ Perfect for verifying your firmware installation and familiarizing yourself with
 
 ## 🎹 Special Key Behaviors
 
+* **Tap-Hold Keys (Letters, Numbers & Special Characters):** Most alphabetic keys, numbers, and special character keys support tap-hold functionality:
+    * **Tap (< 200ms)** — Sends the lowercase letter or base character (e.g., `a`, `1`, `-`)
+    * **Hold (≥ 200ms)** — Sends the uppercase letter or shifted symbol (e.g., `A`, `!`, `_`)
+    * **Supported keys:**
+      - **Letters:** A-Z (tap = lowercase, hold = uppercase)
+      - **Numbers:** 0-9 (tap = number, hold = shifted symbol like `!`, `@`, `#`, etc.)
+      - **Special Characters:** `` ` `` ↔ `~`, `[` ↔ `{`, `]` ↔ `}`, `-` ↔ `_`, `=` ↔ `+`, `/` ↔ `?`, `\` ↔ `|`, `;` ↔ `:`, `'` ↔ `"`, `,` ↔ `<`, `.` ↔ `>`
+    * **Quick Duplication:** Double-tap quickly to produce two lowercase characters (e.g., tapping `A` twice = `aa`)
+    * **Note:** Game keys (X, Y, A, B, Select, Start) and direction keys (Up, Down, Left, Right) do NOT have tap-hold behavior to preserve their functionality for gaming
+
 * **Trackball Scrolling:** Hold the **Select** key and move the trackball to scroll.
     * Move Up/Down for Vertical Scroll
     * Move Left/Right for Horizontal Scroll
