@@ -173,6 +173,43 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 static bool is_locked = false;
 
+// D-pad joystick state. Left/Right share axis 1, Up/Down share axis 0.
+// These directions behave like discrete keys rather than a physical d-pad, so
+// we use last-input priority: when both opposing keys are held, the most
+// recently pressed one wins, and releasing it falls back to the opposite key
+// if it is still held.
+static bool js_left_held  = false;
+static bool js_right_held = false;
+static bool js_up_held    = false;
+static bool js_down_held  = false;
+// Most recently pressed direction on each axis (+1 / -1), 0 if neither held.
+static int8_t js_h_last = 0;  // axis 1: -1 = left, +1 = right
+static int8_t js_v_last = 0;  // axis 0: -1 = up,   +1 = down
+
+static void js_update_axes(void) {
+  // Horizontal (axis 1): last-pressed wins while both held.
+  if (js_left_held && js_right_held) {
+    joystick_set_axis(1, js_h_last * 127);
+  } else if (js_left_held) {
+    joystick_set_axis(1, -127);
+  } else if (js_right_held) {
+    joystick_set_axis(1, 127);
+  } else {
+    joystick_set_axis(1, 0);
+  }
+
+  // Vertical (axis 0): last-pressed wins while both held.
+  if (js_up_held && js_down_held) {
+    joystick_set_axis(0, js_v_last * 127);
+  } else if (js_up_held) {
+    joystick_set_axis(0, -127);
+  } else if (js_down_held) {
+    joystick_set_axis(0, 127);
+  } else {
+    joystick_set_axis(0, 0);
+  }
+}
+
 // Extern from trackball.c to control scroll mode
 extern volatile bool select_button_pressed;
 extern volatile bool precision_mode;
@@ -311,16 +348,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       select_button_pressed = record->event.pressed;
       return true;
     case JS_LEFT:
-      joystick_set_axis(1, record->event.pressed ? -127 : 0);
+      js_left_held = record->event.pressed;
+      if (record->event.pressed) js_h_last = -1;
+      js_update_axes();
       return false;
     case JS_RGHT:
-      joystick_set_axis(1, record->event.pressed ? 127 : 0);
+      js_right_held = record->event.pressed;
+      if (record->event.pressed) js_h_last = 1;
+      js_update_axes();
       return false;
     case JS_UP:
-      joystick_set_axis(0, record->event.pressed ? -127 : 0);
+      js_up_held = record->event.pressed;
+      if (record->event.pressed) js_v_last = -1;
+      js_update_axes();
       return false;
     case JS_DOWN:
-      joystick_set_axis(0, record->event.pressed ? 127 : 0);
+      js_down_held = record->event.pressed;
+      if (record->event.pressed) js_v_last = 1;
+      js_update_axes();
       return false;
     case MS_BTN3:
       if (record->event.pressed && select_button_pressed) {
