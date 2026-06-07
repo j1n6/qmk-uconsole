@@ -51,7 +51,6 @@ Perfect for verifying your firmware installation and familiarizing yourself with
       - The setting persists across power cycles via EEPROM storage
       - When disabled: keys behave normally (single key press/release)
       - When enabled: timing-based tap-hold behavior applies
-    * **Factory Reset:** Press **Fn+C** to reset EEPROM to factory defaults
     * **Note:** Game keys (X, Y, A, B, Select, Start) and direction keys (Up, Down, Left, Right) do NOT have tap-hold behavior to preserve their functionality for gaming
 
 * **Trackball Scrolling:** Hold the **Select** key and move the trackball to scroll.

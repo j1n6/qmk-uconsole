@@ -125,9 +125,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * (   )(F1 )(F2 )(F3 )(F4 )(F5 )(F6 )(F7 )(F8 )(F9 )(F10)(Del)
      * (Cap)(   )(   )(   )(   )(   )(   )(PgU)(Ins)(   )(   )
      * (   )(   )(   )(   )(THd)(Tg2)(Hom)(End)(PgD)(   )(   )(   )
-     * (Hom)(PgD)(   )(   )(   )(Clr)(   )(   )
+     * (Hom)(PgD)(   )(   )(   )(   )(   )(   )
      * (   )(   )(Cmd)(      BlStp       )(Cmd)(   )(  )
-     * THd = Tap-Hold Toggle, Clr = EEPROM Clear
+     * THd = Tap-Hold Toggle
      */
 
     [LY1] = LAYOUT(
@@ -140,7 +140,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_F9,   KC_F10,  KB_LOCK, KC_CAPS, _______, _______, _______, _______,
         _______, _______, _______, _______, KB_TAP_HOLD, _______, KC_PGUP, KC_INS,
         _______, _______, _______, _______, _______, _______, TG(LY2), KC_HOME,
-        KC_END,  KC_PGDN, _______, _______, _______, EE_CLR,  _______, _______,
+        KC_END,  KC_PGDN, _______, _______, _______, _______, _______, _______,
         _______, _______, KC_BRID, KC_BRIU, _______, _______, _______, _______,
         KC_DEL,  _______, _______, _______, BL_STEP, _______, _______, _______
     ),
