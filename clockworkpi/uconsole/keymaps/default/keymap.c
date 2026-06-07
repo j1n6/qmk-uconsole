@@ -75,7 +75,11 @@ const key_override_t vol_key_override =
 const key_override_t *key_overrides[] = {&vol_key_override};
 
 const uint16_t PROGMEM bootloader_combo[] = {KC_LALT, KC_RALT, KC_LGUI, COMBO_END};
-combo_t key_combos[] = {COMBO(bootloader_combo, QK_BOOT)};
+const uint16_t PROGMEM tap_hold_combo[] = {LH_T, KC_HOME, COMBO_END};
+combo_t key_combos[] = {
+  COMBO(bootloader_combo, QK_BOOT),
+  COMBO(tap_hold_combo, KB_TAP_HOLD),
+};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /*
@@ -124,10 +128,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * (Lck)(Prt)(Pau)     (Mut)(   )(   )(   )(F11)(F12)(   )
      * (   )(F1 )(F2 )(F3 )(F4 )(F5 )(F6 )(F7 )(F8 )(F9 )(F10)(Del)
      * (Cap)(   )(   )(   )(   )(   )(   )(PgU)(Ins)(   )(   )
-     * (   )(   )(   )(   )(THd)(Tg2)(Hom)(End)(PgD)(   )(   )(   )
+     * (   )(   )(   )(   )(   )(Tg2)(Hom)(End)(PgD)(   )(   )(   )
      * (Hom)(PgD)(   )(   )(   )(   )(   )(   )
      * (   )(   )(Cmd)(      BlStp       )(Cmd)(   )(  )
-     * THd = Tap-Hold Toggle
+     * Fn+T+H = Tap-Hold Toggle
      */
 
     [LY1] = LAYOUT(
@@ -138,7 +142,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_PSCR, KC_PAUS, KC_MUTE, _______, _______, _______, KC_F11,  KC_F12,
         KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,
         KC_F9,   KC_F10,  KB_LOCK, KC_CAPS, _______, _______, _______, _______,
-        _______, _______, _______, _______, KB_TAP_HOLD, _______, KC_PGUP, KC_INS,
+        _______, _______, _______, _______, _______, _______, KC_PGUP, KC_INS,
         _______, _______, _______, _______, _______, _______, TG(LY2), KC_HOME,
         KC_END,  KC_PGDN, _______, _______, _______, _______, _______, _______,
         _______, _______, KC_BRID, KC_BRIU, _______, _______, _______, _______,
@@ -226,6 +230,7 @@ keyboard_config_t keyboard_config;
 
 // Tap-hold timing tracking
 #define TAP_HOLD_TIMEOUT 200  // milliseconds
+#define TAP_HOLD_KEY_COUNT 47
 
 // Mapping of tap-hold keycodes to their base keycodes
 static const uint16_t tap_hold_map[][2] = {
@@ -243,11 +248,12 @@ static const uint16_t tap_hold_map[][2] = {
   {LH_COMM, KC_COMM},  {LH_DOT, KC_DOT},
 };
 
-static uint16_t tap_hold_key_press_times[47] = {0};  // Track press time for each tap-hold key (36 letters/numbers + 11 special chars)
+static uint16_t tap_hold_key_press_times[TAP_HOLD_KEY_COUNT] = {0};
+static bool tap_hold_passthrough[TAP_HOLD_KEY_COUNT] = {false};
 
 // Helper function to get base keycode from tap-hold keycode
 static uint16_t get_base_keycode(uint16_t keycode) {
-  for (int i = 0; i < 47; i++) {
+  for (int i = 0; i < TAP_HOLD_KEY_COUNT; i++) {
     if (tap_hold_map[i][0] == keycode) {
       return tap_hold_map[i][1];
     }
@@ -274,6 +280,11 @@ static int get_tap_hold_index(uint16_t keycode) {
   return -1;
 }
 
+static bool is_tap_hold_passthrough_active(void) {
+  uint8_t active_mods = get_mods() | get_weak_mods() | get_oneshot_mods();
+  return (active_mods & MOD_MASK_CSAG) || layer_state_is(LY1);
+}
+
 void keyboard_post_init_user(void) {
   keyboard_config.raw = eeconfig_read_user();
   // Default to disabled if EEPROM is uninitialized (raw == 0)
@@ -294,18 +305,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_tap_hold_key(keycode)) {
     uint16_t base_key = get_base_keycode(keycode);
 
-    // If tap-hold is disabled, send key normally
-    if (!keyboard_config.tap_hold_enabled) {
+    int index = get_tap_hold_index(keycode);
+    bool passthrough_active = record->event.pressed && is_tap_hold_passthrough_active();
+
+    if (!keyboard_config.tap_hold_enabled || passthrough_active || tap_hold_passthrough[index]) {
       if (record->event.pressed) {
+        tap_hold_passthrough[index] = passthrough_active;
         register_code(base_key);
       } else {
         unregister_code(base_key);
+        tap_hold_passthrough[index] = false;
       }
       return false;
     }
 
     // Tap-hold is enabled: use timing-based logic
-    int index = get_tap_hold_index(keycode);
     if (record->event.pressed) {
       // Key pressed - record the timestamp
       tap_hold_key_press_times[index] = record->event.time;
