@@ -255,6 +255,7 @@ static const uint16_t tap_hold_map[][2] = {
 #ifndef DISABLE_TAP_HOLD
 static uint16_t tap_hold_key_press_times[TAP_HOLD_KEY_COUNT] = {0};
 static bool tap_hold_passthrough[TAP_HOLD_KEY_COUNT] = {false};
+static bool tap_hold_key_pressed[TAP_HOLD_KEY_COUNT] = {false};
 #endif
 
 // Helper function to get base keycode from tap-hold keycode
@@ -291,6 +292,29 @@ static bool is_tap_hold_passthrough_active(void) {
   uint8_t active_mods = get_mods() | get_weak_mods() | get_oneshot_mods();
   return (active_mods & MOD_MASK_CSAG) || layer_state_is(LY1);
 }
+
+static void resolve_pending_tap_hold_keys(uint16_t current_keycode, uint32_t current_time) {
+  int current_index = is_tap_hold_key(current_keycode) ? get_tap_hold_index(current_keycode) : -1;
+  for (int i = 0; i < TAP_HOLD_KEY_COUNT; i++) {
+    if (tap_hold_key_pressed[i] && i != current_index) {
+      uint16_t base_key = tap_hold_map[i][1];
+      uint16_t elapsed = current_time - tap_hold_key_press_times[i];
+
+      if (elapsed < TAP_HOLD_TIMEOUT) {
+        // Tap - send key as-is (lowercase/number)
+        register_code(base_key);
+        unregister_code(base_key);
+      } else {
+        // Hold - send shift + key (uppercase/shifted symbol)
+        register_code(KC_LSFT);
+        register_code(base_key);
+        unregister_code(base_key);
+        unregister_code(KC_LSFT);
+      }
+      tap_hold_key_pressed[i] = false;
+    }
+  }
+}
 #endif
 
 void keyboard_post_init_user(void) {
@@ -308,6 +332,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (is_locked && keycode != KB_LOCK && keycode != MO(LY1)) {
     return false;
   }
+
+#ifndef DISABLE_TAP_HOLD
+  if (record->event.pressed) {
+    resolve_pending_tap_hold_keys(keycode, record->event.time);
+  }
+#endif
 
   // Handle tap-hold keys
   if (is_tap_hold_key(keycode)) {
@@ -339,20 +369,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
       // Key pressed - record the timestamp
       tap_hold_key_press_times[index] = record->event.time;
+      tap_hold_key_pressed[index] = true;
     } else {
       // Key released - determine if tap or hold
-      uint16_t elapsed = record->event.time - tap_hold_key_press_times[index];
+      if (tap_hold_key_pressed[index]) {
+        uint16_t elapsed = record->event.time - tap_hold_key_press_times[index];
 
-      if (elapsed < TAP_HOLD_TIMEOUT) {
-        // Tap - send key as-is (lowercase/number)
-        register_code(base_key);
-        unregister_code(base_key);
-      } else {
-        // Hold - send shift + key (uppercase/shifted symbol)
-        register_code(KC_LSFT);
-        register_code(base_key);
-        unregister_code(base_key);
-        unregister_code(KC_LSFT);
+        if (elapsed < TAP_HOLD_TIMEOUT) {
+          // Tap - send key as-is (lowercase/number)
+          register_code(base_key);
+          unregister_code(base_key);
+        } else {
+          // Hold - send shift + key (uppercase/shifted symbol)
+          register_code(KC_LSFT);
+          register_code(base_key);
+          unregister_code(base_key);
+          unregister_code(KC_LSFT);
+        }
+        tap_hold_key_pressed[index] = false;
       }
     }
     return false;  // Don't let QMK handle this key
