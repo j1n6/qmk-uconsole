@@ -7,8 +7,15 @@ void rate_meter_interrupt(rate_meter_t* rm) {
     rm->average_delta = CUTOFF_MS;
   } else {
     uint16_t delta = MIN(TIMER_DIFF_16(now, rm->last_time_millis), CUTOFF_MS);
-    // Smoother weighted average: 75% previous state, 25% new input
-    rm->average_delta = (rm->average_delta * 3 + delta) / 4;
+    if (delta < 6) {
+      delta = 6;
+    }
+    if (rm->average_delta == CUTOFF_MS) {
+      rm->average_delta = delta;
+    } else {
+      // Smoother weighted average: 75% previous state, 25% new input
+      rm->average_delta = (rm->average_delta * 3 + delta) / 4;
+    }
   }
   rm->last_time_millis = now;
   rm->cutoff = timeout_reset();
@@ -16,10 +23,6 @@ void rate_meter_interrupt(rate_meter_t* rm) {
 
 void rate_meter_tick(rate_meter_t* rm, millis_t delta) {
   rm->cutoff = timeout_update(rm->cutoff, delta);
-  if (!timeout_get(rm->cutoff)) {
-    // Gradually increase average_delta when no movement is detected to slow down glide
-    rm->average_delta += delta;
-  }
 }
 
 void rate_meter_expire(rate_meter_t* rm) {
@@ -36,6 +39,8 @@ float rate_meter_rate(rate_meter_t* rm) {
   } else if (rm->average_delta == 0) {
     return 1000.0f;
   } else {
-    return 1000.0f / (float)rm->average_delta;
+    uint16_t time_since_interrupt = TIMER_DIFF_16(timer_read(), rm->last_time_millis);
+    uint16_t effective_delta = MAX(rm->average_delta, time_since_interrupt);
+    return 1000.0f / (float)effective_delta;
   }
 }

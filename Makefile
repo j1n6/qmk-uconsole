@@ -4,7 +4,7 @@ SUDO = sudo
 USB_ID = 1eaf:0003
 
 .PHONY: default
-default: clockworkpi_uconsole_default.bin
+default: clockworkpi_uconsole_default.bin clockworkpi_uconsole_no_tap_hold.bin
 
 .PHONY: reflash
 reflash: clockworkpi_uconsole_default.bin
@@ -14,8 +14,14 @@ reflash: clockworkpi_uconsole_default.bin
 clockworkpi_uconsole_default.bin: qmk_firmware/.build/clockworkpi_uconsole_default.bin
 	mv qmk_firmware/.build/clockworkpi_uconsole_default.bin $@
 
+clockworkpi_uconsole_no_tap_hold.bin: qmk_firmware/.build/clockworkpi_uconsole_no_tap_hold.bin
+	mv qmk_firmware/.build/clockworkpi_uconsole_no_tap_hold.bin $@
+
 qmk_firmware/.build/clockworkpi_uconsole_default.bin: clockworkpi/uconsole/keymaps/default/keymap.c qmk_firmware
 	sh -c 'cd qmk_firmware; qmk compile -kb clockworkpi/uconsole -km default'
+
+qmk_firmware/.build/clockworkpi_uconsole_no_tap_hold.bin: clockworkpi/uconsole/keymaps/no_tap_hold/keymap.c clockworkpi/uconsole/keymaps/default/keymap.c qmk_firmware
+	sh -c 'cd qmk_firmware; qmk compile -kb clockworkpi/uconsole -km no_tap_hold'
 
 qmk_firmware:
 	rm -rf $@.tmp

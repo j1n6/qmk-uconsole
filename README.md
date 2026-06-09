@@ -52,6 +52,7 @@ Perfect for verifying your firmware installation and familiarizing yourself with
       - When disabled: keys behave normally (single key press/release)
       - When enabled: timing-based tap-hold behavior applies
       - Modifier and Fn combinations bypass tap-hold, so shortcuts like `Ctrl+A`, `Alt+Tab`, and `Shift+1` behave normally
+      - *Note:* In the `clockworkpi_uconsole_no_tap_hold.bin` build, the tap-hold feature is completely compiled out, so `Fn+T+H` does nothing and keys always behave normally.
     * **Note:** Game keys (X, Y, A, B, Select, Start) and direction keys (Up, Down, Left, Right) do NOT have tap-hold behavior to preserve their functionality for gaming
 
 * **Trackball Scrolling:** Hold the **Select** key and move the trackball to scroll.
@@ -90,8 +91,10 @@ Before starting, ensure you have the necessary tools installed on your uConsole:
 
 3. **Download the latest QMK firmware:**
    - Go to [Releases](https://github.com/j1n6/qmk-uconsole/releases)
-   - Download the `clockworkpi_uconsole_default.bin` file
-   - Move it to the `uconsole_keyboard_flash` folder
+   - Download the firmware binary file of your choice:
+     - **`clockworkpi_uconsole_default.bin`**: Standard full-featured firmware (includes the tap-hold toggle feature).
+     - **`clockworkpi_uconsole_no_tap_hold.bin`**: Simplified firmware with the tap-hold feature completely disabled/compiled out.
+   - Move the downloaded `.bin` file to the `uconsole_keyboard_flash` folder. *(Note: If you download the `no_tap_hold` build, replace `clockworkpi_uconsole_default.bin` with `clockworkpi_uconsole_no_tap_hold.bin` in the flashing commands below.)*
 
 ---
 

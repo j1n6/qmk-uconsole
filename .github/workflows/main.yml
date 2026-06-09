@@ -33,18 +33,29 @@ jobs:
     - name: Link custom keymap definition
       run: ln -s $(pwd)/clockworkpi $(pwd)/qmk_firmware/keyboards/clockworkpi
     
-    - name: Build firmware hex distribution
+    - name: Build firmware hex distribution (default)
       run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km default
+
+    - name: Build firmware hex distribution (no tap-hold)
+      run: cd qmk_firmware && qmk compile -kb clockworkpi/uconsole -km no_tap_hold
       
-    - name: Upload artifact
+    - name: Upload default artifact
       uses: actions/upload-artifact@master
       with:
         name: clockworkpi_uconsole_default.bin  
         path: qmk_firmware/.build/clockworkpi_uconsole_default.bin
+
+    - name: Upload no tap-hold artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: clockworkpi_uconsole_no_tap_hold.bin  
+        path: qmk_firmware/.build/clockworkpi_uconsole_no_tap_hold.bin
     
     # - name: Release
     #   uses: docker://softprops/action-gh-release
     #   if: startsWith(github.ref, 'refs/tags/')
     #   with:
-    #     files: qmk_firmware/.build/clockworkpi_uconsole_default.bin
+    #     files: |
+    #       qmk_firmware/.build/clockworkpi_uconsole_default.bin
+    #       qmk_firmware/.build/clockworkpi_uconsole_no_tap_hold.bin
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
