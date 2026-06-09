@@ -41,13 +41,14 @@ static int8_t  correction_count[AXIS_NUM] = {0};
 static uint16_t last_axis_activity[AXIS_NUM] = {0};
 
 // Natural Acceleration Curve: High precision at low speeds, power curve at high speeds
-static float rateToVelocityCurve(float input) {
+static float rateToVelocityCurve(float input, float acceleration_scale) {
     float abs_input = fabsf(input);
     if (abs_input < 0.02f) return 0; // Lower deadzone for finer control
 
     float x = abs_input - 0.02f;
-    // Polynomial acceleration (x^1.5) for natural feel over long distances
-    float accel = powf(x, 1.5f) / 40.0f;
+    // Double only the high-speed acceleration; keep the linear term unchanged
+    // so slow movements retain their existing precision.
+    float accel = (powf(x, 1.5f) / 20.0f) * acceleration_scale;
     float linear = x / 20.0f;
 
     return 0.1f + linear + accel; 
@@ -126,7 +127,12 @@ static void trackball_move(uint8_t axis, int8_t direction) {
     const float ry = rate_meter_rate(&rate_meters[AXIS_Y]);
 
     const float rate = sqrtf(rx * rx + ry * ry);
-    float velocity = rateToVelocityCurve(rate);
+    const float dominant_rate = fmaxf(rx, ry);
+    const float diagonal_balance = (dominant_rate > 0) ? (fminf(rx, ry) / dominant_rate) : 0;
+    // Compensate for velocity being split across two axes. The nonlinear boost
+    // reaches sqrt(2) for a balanced diagonal and fades out toward either axis.
+    const float acceleration_scale = 1.0f + 0.41421356f * diagonal_balance;
+    float velocity = rateToVelocityCurve(rate, acceleration_scale);
 
     // Apply precision scaling if enabled
     if (precision_mode) {
