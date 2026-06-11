@@ -220,6 +220,7 @@ static void js_update_axes(void) {
 
 // Extern from trackball.c to control scroll mode
 extern volatile bool select_button_pressed;
+extern volatile bool select_button_scrolled;
 extern volatile bool precision_mode;
 
 // EEPROM Configuration
@@ -413,7 +414,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KC_SELECT: case JS_4:
       // Select key enables scroll mode while held (preserve tap behavior)
       select_button_pressed = record->event.pressed;
-      return true;
+      if (record->event.pressed) {
+          select_button_scrolled = false;
+      } else {
+          if (!select_button_scrolled) {
+              if (keycode == KC_SELECT) {
+                  register_code(KC_SELECT);
+                  unregister_code(KC_SELECT);
+              } else {
+                  register_joystick_button(keycode - JS_0);
+                  unregister_joystick_button(keycode - JS_0);
+              }
+          }
+      }
+      return false;
     case JS_LEFT:
       js_left_held = record->event.pressed;
       if (record->event.pressed) js_h_last = -1;
@@ -437,6 +451,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case MS_BTN3:
       if (record->event.pressed && select_button_pressed) {
           precision_mode = !precision_mode;
+          select_button_scrolled = true;
           return false;
       }
       return true;

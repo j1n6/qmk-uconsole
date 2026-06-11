@@ -19,6 +19,7 @@ enum { MODE_WHEEL, MODE_MOUSE };
 static uint8_t last_mode = MODE_MOUSE;
 static uint16_t last_report = 0;
 volatile bool select_button_pressed = false; // toggled from keymap
+volatile bool select_button_scrolled = false; // set when trackball moves while select is pressed
 volatile bool precision_mode = false;          // toggled from keymap
 
 static int8_t distances[AXIS_NUM] = {0};
@@ -157,6 +158,10 @@ static void trackball_move(uint8_t axis, int8_t direction) {
       glider_update_speed(&gliders[AXIS_X], vx);
       glider_update(&gliders[AXIS_Y], vy, sustain_y);
     }
+  }
+
+  if (select_button_pressed) {
+      select_button_scrolled = true;
   }
 }
 
