@@ -16,7 +16,7 @@ void glider_update(glider_t* gr, float speed, uint16_t sustain) {
   // Boost the release (coast) time for high-speed movements,
   // and scale down decay duration at lower speeds to prevent overshoot.
   if (speed > 3.0f) {
-      gr->release = sustain + (uint16_t)(speed * 3.0f); 
+      gr->release = sustain + (uint16_t)(speed * 1.2f); 
   } else if (speed > 1.5f) {
       gr->release = sustain / 4;
   } else {
